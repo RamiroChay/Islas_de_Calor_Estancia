@@ -1,0 +1,20 @@
+.env
+
+# Data (CRÍTICO)
+data/
+web/data/
+
+# Pesados
+*.csv
+*.tif
+*.png
+
+# Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
