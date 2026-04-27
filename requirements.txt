@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pandas
+numpy
+geopy
+scipy
+joblib
+pymongo

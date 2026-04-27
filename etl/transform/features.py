@@ -1,56 +1,78 @@
 import pandas as pd
 import numpy as np
-import os
-from geopy.distance import geodesic
 
-# 📥 INPUT: El archivo que contiene todas las estaciones ya con NDVI
-input_path = "data/final/conagua_all.csv" 
-output_path = "data/final/features_ml.csv"
+def transform_data(df):
+    if df.empty:
+        return df
 
-# 📍 PUNTOS DE REFERENCIA (Mérida, Yucatán)
-CENTRO_MERIDA = (20.967, -89.623)
-PUERTO_PROGRESO = (21.285, -89.663) # Referencia para la costa
+    # ---------------------------
+    # 1. Limpieza
+    # ---------------------------
+    df = df.dropna()
+    df = df.copy()
 
-def calcular_distancia(row, punto_ref):
-    return geodesic((row['latitud'], row['longitud']), punto_ref).km
+    # ---------------------------
+    # 2. Variables base
+    # ---------------------------
+    T = df['temperatura']
+    H = df['humedad']
+    R = df['radiacion']
+    S = df['salinidad']
 
-def generar_features():
-    if not os.path.exists(input_path):
-        print(f"❌ No existe el archivo {input_path}. Corre merge.py primero.")
-        return
+    # ---------------------------
+    # 3. Referencias físicas
+    # ---------------------------
+    T_ref = T.min()        # zona más fría (proxy rural)
+    H_ref = H.max()        # zona más húmeda (proxy vegetación)
 
-    df = pd.read_csv(input_path)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values(['station', 'date'])
+    # ---------------------------
+    # 4. UHI (Isla de calor)
+    # ---------------------------
+    df['uhi'] = T - T_ref
 
-    print("🚀 Calculando features geográficas...")
-    # 1. Distancias estáticas
-    # Nota: Como la lat/lon de una estación no cambia, podrías optimizar esto 
-    # calculándolo solo una vez por estación, pero para este volumen de datos está bien así:
-    df['dist_centro'] = df.apply(lambda r: calcular_distancia(r, CENTRO_MERIDA), axis=1)
-    df['dist_costa'] = df.apply(lambda r: calcular_distancia(r, PUERTO_PROGRESO), axis=1)
+    # ---------------------------
+    # 5. Normalización
+    # ---------------------------
+    df['temp_norm'] = (T - T.min()) / (T.max() - T.min() + 1e-6)
+    df['humedad_norm'] = H / 100.0
+    df['radiacion_norm'] = R / (R.max() + 1e-6)
 
-    print("📅 Calculando features temporales...")
-    # 2. Variables Cíclicas (Mes)
-    df['month_sin'] = np.sin(2 * np.pi * df['date'].dt.month / 12)
-    df['month_cos'] = np.cos(2 * np.pi * df['date'].dt.month / 12)
+    # ---------------------------
+    # 6. Déficit de humedad
+    # ---------------------------
+    df['deficit_humedad'] = H_ref - H
 
-    # 3. Lags (Inercia térmica: ¿qué pasó ayer?)
-    # Agrupamos por estación para que el "ayer" sea de la misma ubicación
-    df['temp_avg_lag1'] = df.groupby('station')['temp_avg'].shift(1)
-    df['precip_lag1'] = df.groupby('station')['precipitation'].shift(1)
+    # ---------------------------
+    # 7. Índice de vegetación (proxy físico)
+    # ---------------------------
+    df['indice_vegetacion'] = (
+        -0.6 * df['temp_norm'] +
+         0.4 * df['humedad_norm']
+    )
 
-    # 4. UHI Intensity (Anomalía de Isla de Calor)
-    # Calculamos el promedio diario de todas las estaciones como "línea base"
-    daily_avg = df.groupby('date')['temp_avg'].transform('mean')
-    df['uhi_intensity'] = df['temp_avg'] - daily_avg
+    # ---------------------------
+    # 8. Índice de energía (radiación dominante)
+    # ---------------------------
+    df['indice_energia'] = df['radiacion_norm'] * (1 - df['humedad_norm'])
 
-    # Limpieza final: quitar los primeros registros de cada estación que quedaron con NaN en el Lag
-    df = df.dropna(subset=['temp_avg_lag1'])
+    # ---------------------------
+    # 9. Clasificación térmica
+    # ---------------------------
+    def clasificar_uhi(uhi):
+        if uhi < 2:
+            return "baja"
+        elif uhi < 4:
+            return "media"
+        else:
+            return "alta"
 
-    # 💾 Guardar
-    df.to_csv(output_path, index=False)
-    print(f"✅ Dataset de Features listo para ML: {output_path}")
+    df['zona_termica'] = df['uhi'].apply(clasificar_uhi)
 
-if __name__ == "__main__":
-    generar_features()
+    # ---------------------------
+    # 10. Tipo de superficie (proxy)
+    # ---------------------------
+    df['tipo_superficie'] = df['salinidad'].apply(
+        lambda x: 'urbano' if x > df['salinidad'].median() else 'natural'
+    )
+
+    return df
