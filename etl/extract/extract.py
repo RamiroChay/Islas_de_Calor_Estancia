@@ -8,7 +8,7 @@ load_dotenv()
 def get_raw_data():
     client = MongoClient(os.getenv("MONGO_URI"))
     db = client[os.getenv("MONGO_DB")]
-    collection = db["sensores_raw"]
+    collection = db["SensoresRaw"]
     
     # Traemos todo lo que han mandado los sensores
     data = list(collection.find())

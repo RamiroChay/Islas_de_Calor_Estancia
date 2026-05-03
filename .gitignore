@@ -1,4 +1,7 @@
 .env
+.venv
+venv
+.cfg
 
 # Data (CRÍTICO)
 data/

@@ -1,73 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isla de Calor Mérida - Alta Resolución</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #111; }
-        #map { height: 100vh; width: 100%; }
-        
-        #controls {
-            position: absolute; top: 20px; right: 20px; z-index: 1000;
-            background: rgba(20, 20, 20, 0.9); color: white; padding: 20px;
-            border-radius: 10px; border: 1px solid #444; width: 280px;
-        }
+<meta charset="UTF-8">
+<title>Islas de Calor</title>
 
-        h2 { margin: 0 0 10px 0; font-size: 18px; color: #ff4500; }
-        select {
-            width: 100%; padding: 10px; background: #333; color: white;
-            border: 1px solid #555; border-radius: 5px; cursor: pointer;
-        }
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
-        .legend { margin-top: 15px; font-size: 12px; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
-        .color-box { width: 15px; height: 15px; margin-right: 10px; border-radius: 2px; }
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
-        .temp-label {
-            background: rgba(255, 69, 0, 0.9); color: white;
-            padding: 2px 6px; border-radius: 4px; font-weight: bold;
-            font-size: 12px; border: 1px solid white;
-        }
-        
-        /* Efecto de carga */
-        #loader {
-            display: none; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); z-index: 2000;
-            color: white; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
-        }
-    </style>
 </head>
+
 <body>
 
-    <div id="loader">Cargando datos de alta resolución...</div>
+<div class="header">
+  <div>ÚLTIMA ACTUALIZACIÓN: <span id="timestamp">---</span></div>
 
-    <div id="controls">
-        <h2>Análisis Térmico Mérida</h2>
-        <p style="font-size: 11px; color: #aaa;">Visualización de micro-cambios urbanos</p>
-        
-        <select id="select-month">
-            <option value="data/heatmap_2024-06.csv">Junio 2024 (Pico)</option>
-            <option value="data/heatmap_2025-07.csv">Agosto 2024</option>
-            <option value="data/heatmap_2025-11.csv">Noviembre 2025</option>
-        </select>
+  <div class="icons">
+    <!-- 🔧 REEMPLAZAR POR ICONOS REALES EN /assets -->
+    <div class="icon">☀️</div>
+    <div class="icon">💧</div>
+    <div class="icon">🌿</div>
+  </div>
+</div>
 
-        <div class="legend">
-            <div class="legend-item"><span class="color-box" style="background: #ff0000;"></span> +4.5°C (Isla Crítica)</div>
-            <div class="legend-item"><span class="color-box" style="background: #ffa500;"></span> +2.5°C (Zona Urbana)</div>
-            <div class="legend-item"><span class="color-box" style="background: #ffff00;"></span> +1.0°C (Transición)</div>
-            <div class="legend-item"><span class="color-box" style="background: #00ffff;"></span> 0.0°C (Zona Rural)</div>
-        </div>
-    </div>
+<div class="container">
 
-    <div id="map"></div>
+  <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <script src="script.js"></script>
+  <div class="panel">
+
+    <div class="title">PARÁMETROS</div>
+
+    <select id="selector"></select>
+
+    <div id="panel-content"></div>
+
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
 </body>
 </html>

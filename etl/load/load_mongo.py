@@ -53,3 +53,15 @@ def load_grid(grid_data):
     collection.delete_many({"pipeline_timestamp": {"$ne": timestamp}})
 
     collection.insert_many(grid_data)
+
+def load_resumen(resumen):
+    if not resumen:
+        return
+
+    db = get_db()
+    collection = db["resumen_ambiental"]
+
+    # mantener solo el último
+    collection.delete_many({})
+
+    collection.insert_one(resumen)

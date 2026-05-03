@@ -5,21 +5,35 @@ import os
 import threading
 import time
 
-from dags import run_pipeline
+from dags.weather_pipeline import run_pipeline
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI()
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 MONGO_URI = os.getenv("MONGO_URI")
 
 client = MongoClient(MONGO_URI)
-db = client["islas_calor"]
+db = client[os.getenv("MONGO_DB")]
 
-raw_collection = db["sensores_raw"]
-features_collection = db["sensores_features"]
-grid_collection = db["map_grid"]
+raw_collection = db["SensoresRaw"]
+features_collection = db["mediciones_analitica"]
+grid_collection = db["mapa_calor_actual"]
+resumen_collection = db['resumen_ambiental']
 
 # ---------------------------
-# 🧠 Background scheduler
+# Background scheduler
 # ---------------------------
 def scheduler():
     while True:
@@ -83,10 +97,16 @@ def get_sensores():
         "lat": 1,
         "lon": 1,
         "temperatura": 1,
+        "humedad": 1,
+        "salinidad": 1,
+        "radiacion": 1,
         "uhi": 1,
-        "zona_termica": 1
+        "zona_termica": 1,
+        "tipo_superficie": 1,
+        "indice_vegetacion": 1,
+        "indice_energia": 1,
+        "deficit_humedad": 1
     }))
-
 
 # ---------------------------
 # GET grid (heatmap)
@@ -99,3 +119,10 @@ def get_grid():
         "lon": 1,
         "uhi": 1
     }))
+
+# ---------------------------
+# GET resumen
+# ---------------------------
+@app.get("/api/resumen")
+def get_resumen():
+    return db["resumen_ambiental"].find_one({}, {"_id": 0})

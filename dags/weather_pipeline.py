@@ -1,7 +1,13 @@
 from etl.extract.extract import get_raw_data
 from etl.transform.features import transform_data
 from etl.transform.grid import idw_interpolation
-from etl.load.load_mongo import load_features, load_grid
+from etl.load.load_mongo import load_features, load_grid, load_resumen
+from etl.transform.resumen import calcular_resumen
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def run_pipeline():
     try:
@@ -50,6 +56,11 @@ def run_pipeline():
 
         print(f"Grid generado: {len(grid_data)} puntos")
 
+        resumen = calcular_resumen(df, features_df)
+        load_resumen(resumen)
+
+        print("Resumen global guardado")
+
         # ---------------------------
         # 5. LOAD GRID
         # ---------------------------
@@ -60,7 +71,6 @@ def run_pipeline():
 
     except Exception as e:
         print(f"Error en pipeline: {e}")
-
 
 if __name__ == "__main__":
     run_pipeline()
