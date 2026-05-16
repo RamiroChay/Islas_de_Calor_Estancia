@@ -11,6 +11,7 @@ web/data/
 *.csv
 *.tif
 *.png
+!web/assets/*.png
 
 # Python
 __pycache__/
