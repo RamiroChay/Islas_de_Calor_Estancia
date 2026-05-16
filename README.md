@@ -288,6 +288,6 @@ La interpolación espacial es **IDW (Inverse Distance Weighting)** con potencia 
 Proyecto desarrollado en el marco de una estancia de investigación con la participación de:
 
 - **Universidad Politécnica de Yucatán (UPY)**
-- **Universidad Autónoma de Yucatán (UADY)**
+- **Tecnológico de Software**
 
 Sensores, software y visualización: equipo de Islas de Calor — Mérida, Yucatán.
