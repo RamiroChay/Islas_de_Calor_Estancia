@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Islas de Calor — Plataforma de Análisis Urbano · Mérida</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="topbar-logos">
+    <img src="assets/upy-logo.png" alt="Universidad Politécnica de Yucatán" class="logo logo-upy" onerror="this.style.display='none'">
+    <img src="assets/software-logo.png" alt="Tecnológico de Software" class="logo logo-software" onerror="this.style.display='none'">
+  </div>
+
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-title">Islas de Calor</div>
+      <div class="brand-subtitle">Plataforma de análisis urbano · Mérida, Yucatán</div>
+    </div>
+  </div>
+
+  <nav class="topbar-nav">
+    <button class="topbar-tab active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="topbar-tab" data-view="docs">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Documentación API
+    </button>
+  </nav>
+
+  <div class="topbar-center">
+    <div class="status-pill" id="status-pill">
+      <span class="status-dot"></span>
+      <span id="status-text">Conectando…</span>
+    </div>
+    <div class="last-update">Última actualización · <strong id="last-update">—</strong></div>
+  </div>
+
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" id="btn-refresh" title="Actualizar datos">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+      Actualizar
+    </button>
+    <div class="export-wrapper">
+      <button class="btn btn-primary" id="btn-export">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar datos
+      </button>
+      <div class="export-menu" id="export-menu" hidden>
+        <button data-export="sensors-csv">
+          <span class="menu-icon">📄</span>
+          <div><div class="menu-title">Sensores · CSV</div><div class="menu-sub">Mediciones + features derivadas</div></div>
+        </button>
+        <button data-export="grid-csv">
+          <span class="menu-icon">🗺️</span>
+          <div><div class="menu-title">Grid heatmap · CSV</div><div class="menu-sub">2,500 puntos interpolados</div></div>
+        </button>
+        <button data-export="xlsx">
+          <span class="menu-icon">📊</span>
+          <div><div class="menu-title">Reporte completo · Excel</div><div class="menu-sub">3 hojas: sensores, grid, resumen</div></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+<main class="layout" id="layout">
+
+  <aside class="panel-left" id="panel-left">
+    <div class="panel-header">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="8.5"/></svg>
+      <span class="panel-title">Panel de capas</span>
+      <button class="panel-collapse" id="left-collapse" title="Colapsar">‹</button>
+    </div>
+
+    <div class="panel-body">
+
+      <section class="layer-section">
+        <div class="layer-heading">1 · Visualización</div>
+        <label class="layer-row"><input type="checkbox" id="layer-heat" checked><span>Mapa de calor (UHI)</span></label>
+        <label class="layer-row"><input type="checkbox" id="layer-sensors" checked><span>Sensores</span></label>
+        <label class="layer-row"><input type="checkbox" id="layer-coverage"><span>Áreas de cobertura</span></label>
+        <label class="layer-row"><input type="checkbox" id="layer-labels"><span>Etiquetas de temperatura</span></label>
+      </section>
+
+      <section class="layer-section">
+        <div class="layer-heading">2 · Zonas térmicas</div>
+        <label class="layer-row"><input type="checkbox" class="zona-filter" value="alta" checked><span class="dot dot-red"></span><span>Alta (UHI ≥ 4°C)</span></label>
+        <label class="layer-row"><input type="checkbox" class="zona-filter" value="media" checked><span class="dot dot-orange"></span><span>Media (2 – 4°C)</span></label>
+        <label class="layer-row"><input type="checkbox" class="zona-filter" value="baja" checked><span class="dot dot-green"></span><span>Baja (&lt; 2°C)</span></label>
+      </section>
+
+      <section class="layer-section">
+        <div class="layer-heading">3 · Tipo de superficie</div>
+        <label class="layer-row"><input type="checkbox" class="sup-filter" value="urbano" checked><span class="ico-square">▣</span><span>Urbano</span></label>
+        <label class="layer-row"><input type="checkbox" class="sup-filter" value="natural" checked><span class="ico-square">▤</span><span>Natural</span></label>
+      </section>
+
+      <section class="layer-section">
+        <div class="layer-heading">4 · Selección de sensor</div>
+        <select id="selector" class="select"></select>
+      </section>
+
+      <section class="layer-section legend">
+        <div class="layer-heading">Leyenda · UHI (°C)</div>
+        <div class="legend-bar"></div>
+        <div class="legend-labels">
+          <span>0</span><span>2.5</span><span>5</span><span>7.5</span><span>10+</span>
+        </div>
+        <div class="legend-foot">Diferencia de temperatura vs. zona más fría (proxy rural)</div>
+      </section>
+
+    </div>
+  </aside>
+
+  <div class="map-wrapper">
+    <div id="map"></div>
+
+    <button class="floating-expand" id="floating-expand" title="Mostrar panel de capas">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <div class="map-overlay map-overlay-top">
+      <div class="overlay-card">
+        <div class="overlay-label">Sensores activos</div>
+        <div class="overlay-value" id="ov-sensors">—</div>
+      </div>
+      <div class="overlay-card">
+        <div class="overlay-label">Cobertura grid</div>
+        <div class="overlay-value" id="ov-grid">—</div>
+      </div>
+      <div class="overlay-card">
+        <div class="overlay-label">UHI máx</div>
+        <div class="overlay-value warn" id="ov-uhi">—<span class="ou">°C</span></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="panel-right" id="panel-right">
+
+    <section class="panel-section">
+      <div class="section-title">Resumen estación</div>
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="hero-block">
+            <div class="hero-value" id="hero-temp">—</div>
+            <div class="hero-unit">°C</div>
+            <div class="hero-label">Temp promedio</div>
+          </div>
+          <div class="hero-divider"></div>
+          <div class="hero-block">
+            <div class="hero-value accent" id="hero-uhi">—</div>
+            <div class="hero-unit">°C</div>
+            <div class="hero-label">UHI promedio</div>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <span class="zona-chip" id="hero-zona">—</span>
+          <span class="hero-meta"><span id="hero-count">—</span> sensores</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel-section">
+      <div class="section-title">Condiciones actuales</div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </section>
+
+    <section class="panel-section" id="sensor-detail-section" hidden>
+      <div class="section-title">Detalle del sensor</div>
+      <div id="sensor-detail"></div>
+    </section>
+
+    <section class="panel-section">
+      <div class="section-title">Distribución térmica</div>
+      <div class="dist-chart" id="dist-chart"></div>
+    </section>
+
+    <section class="panel-section">
+      <div class="section-title">Acerca de los índices</div>
+      <div class="info-box">
+        <p><b>UHI</b> · Urban Heat Island: temperatura del sensor menos la del punto más frío de la red.</p>
+        <p><b>Índice vegetación</b> · Proxy físico que combina temperatura y humedad normalizadas.</p>
+        <p><b>Índice energía</b> · Carga radiativa efectiva ajustada por humedad.</p>
+      </div>
+    </section>
+
+  </aside>
+
+</main>
+
+
+<!-- =========================================
+     DOCUMENTACIÓN API
+     ========================================= -->
+<section class="docs-view" id="docs-view" hidden>
+
+  <aside class="docs-sidebar">
+    <div class="docs-sidebar-title">Documentación API</div>
+    <div class="docs-sidebar-version">v1.0 · REST · JSON</div>
+
+    <nav class="docs-toc">
+      <div class="toc-group">Introducción</div>
+      <a class="toc-link" href="#intro">Visión general</a>
+      <a class="toc-link" href="#base-url">Base URL</a>
+      <a class="toc-link" href="#auth">Autenticación</a>
+
+      <div class="toc-group">Endpoints</div>
+      <a class="toc-link" href="#ep-post-sensores"><span class="m-post">POST</span> /api/sensores</a>
+      <a class="toc-link" href="#ep-get-sensores"><span class="m-get">GET</span> /api/sensores</a>
+      <a class="toc-link" href="#ep-get-grid"><span class="m-get">GET</span> /api/grid</a>
+      <a class="toc-link" href="#ep-get-resumen"><span class="m-get">GET</span> /api/resumen</a>
+
+      <div class="toc-group">Esquema</div>
+      <a class="toc-link" href="#schema-payload">Payload del sensor</a>
+      <a class="toc-link" href="#schema-features">Features derivadas</a>
+
+      <div class="toc-group">Python · Enviar datos</div>
+      <a class="toc-link" href="#py-install">Instalación</a>
+      <a class="toc-link" href="#py-basico">Envío básico</a>
+      <a class="toc-link" href="#py-continuo">Envío continuo</a>
+      <a class="toc-link" href="#py-retry">Reintentos y errores</a>
+      <a class="toc-link" href="#py-batch">Envío en batch</a>
+      <a class="toc-link" href="#py-cliente">Cliente reutilizable</a>
+      <a class="toc-link" href="#py-rpi">Raspberry Pi + DHT22</a>
+
+      <div class="toc-group">Python · Consumir datos</div>
+      <a class="toc-link" href="#py-get-basico">Consulta básica</a>
+      <a class="toc-link" href="#py-get-pandas">Cargar a Pandas</a>
+      <a class="toc-link" href="#py-get-analisis">Análisis & estadísticas</a>
+      <a class="toc-link" href="#py-get-plot">Visualizar heatmap</a>
+      <a class="toc-link" href="#py-get-export">Exportar a CSV/Excel</a>
+      <a class="toc-link" href="#py-get-async">Consulta asíncrona</a>
+      <a class="toc-link" href="#py-get-poll">Polling y monitoreo</a>
+
+      <div class="toc-group">Referencia</div>
+      <a class="toc-link" href="#codes">Códigos de respuesta</a>
+      <a class="toc-link" href="#pipeline">Pipeline interno</a>
+    </nav>
+  </aside>
+
+  <div class="docs-content">
+
+    <!-- ===== INTRO ===== -->
+    <article id="intro" class="doc-block">
+      <div class="doc-eyebrow">Documentación de referencia</div>
+      <h1 class="doc-h1">API Islas de Calor</h1>
+      <p class="doc-lead">
+        API REST para la ingesta de mediciones ambientales desde sensores distribuidos y la
+        consulta de datos procesados. Diseñada para dispositivos de bajo recurso (Raspberry Pi,
+        ESP32 con MicroPython, gateways edge) que envían telemetría en formato JSON.
+      </p>
+
+      <div class="doc-callouts">
+        <div class="callout">
+          <div class="callout-icon">⚡</div>
+          <div>
+            <div class="callout-title">REST + JSON</div>
+            <div class="callout-text">Sin protocolos propietarios. Cualquier cliente HTTP funciona.</div>
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-icon">🔄</div>
+          <div>
+            <div class="callout-title">Procesamiento automático</div>
+            <div class="callout-text">El pipeline ETL corre cada 5 min sobre los datos crudos.</div>
+          </div>
+        </div>
+        <div class="callout">
+          <div class="callout-icon">📍</div>
+          <div>
+            <div class="callout-title">Geo-referenciado</div>
+            <div class="callout-text">Cada medición incluye coordenadas (lat, lon) para interpolación espacial.</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ===== BASE URL ===== -->
+    <article id="base-url" class="doc-block">
+      <h2 class="doc-h2">Base URL</h2>
+      <p>Todas las rutas de esta API están prefijadas con la siguiente URL base:</p>
+      <div class="url-pill">
+        <span class="url-method">https://</span>
+        <code id="base-url-value">127.0.0.1:8000</code>
+        <button class="btn-mini" data-copy-target="base-url-value">Copiar</button>
+      </div>
+      <p class="doc-note">
+        En producción, reemplaza por el dominio público de tu despliegue (p.ej. <code>https://api.islasdecalor.org</code>).
+        El servidor expone CORS abierto para facilitar pruebas desde cualquier origen.
+      </p>
+    </article>
+
+    <!-- ===== AUTH ===== -->
+    <article id="auth" class="doc-block">
+      <h2 class="doc-h2">Autenticación</h2>
+      <p>
+        La versión actual de la API es <b>pública sin autenticación</b> — pensada para una red interna o
+        con control de acceso a nivel de red (firewall, VPN, IP allow-list).
+      </p>
+      <div class="alert alert-warn">
+        <b>Recomendación de producción.</b> Antes de exponer la API a Internet, añade autenticación
+        por token (header <code>Authorization: Bearer ...</code>) y limita por IP en el firewall del
+        servidor. La base de datos Cosmos DB ya está protegida por <code>privatelink</code>.
+      </div>
+    </article>
+
+    <!-- ===== ENDPOINT: POST ===== -->
+    <article id="ep-post-sensores" class="doc-block">
+      <h2 class="doc-h2">Enviar medición de sensor</h2>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <code class="endpoint-path">/api/sensores</code>
+        </div>
+        <p class="endpoint-desc">
+          Recibe una medición individual desde un dispositivo sensor y la persiste en la
+          colección <code>SensoresRaw</code>. El backend asigna automáticamente el campo
+          <code>timestamp</code> (UTC) en el momento de la recepción.
+        </p>
+      </div>
+
+      <h3 class="doc-h3">Cuerpo de la petición</h3>
+      <p>Content-Type: <code>application/json</code></p>
+
+      <table class="param-table">
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Unidad</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><code>device_id</code></td><td>string</td><td>—</td><td>Identificador único del sensor</td></tr>
+          <tr><td><code>temperatura</code></td><td>number</td><td>°C</td><td>Temperatura ambiente</td></tr>
+          <tr><td><code>humedad</code></td><td>number</td><td>%</td><td>Humedad relativa (0–100)</td></tr>
+          <tr><td><code>salinidad</code></td><td>number</td><td>ratio</td><td>Salinidad del suelo (0–1)</td></tr>
+          <tr><td><code>radiacion</code></td><td>number</td><td>W/m²</td><td>Radiación solar</td></tr>
+          <tr><td><code>lat</code></td><td>number</td><td>°</td><td>Latitud WGS-84</td></tr>
+          <tr><td><code>lon</code></td><td>number</td><td>°</td><td>Longitud WGS-84</td></tr>
+          <tr><td><code>estado</code></td><td>string</td><td>—</td><td><code>"activo"</code> / <code>"mantenimiento"</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="example-pair">
+        <div class="example-col">
+          <h3 class="doc-h3">Ejemplo · Request</h3>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">JSON</span>
+              <button class="code-copy">Copiar</button>
+            </div>
+<pre><code class="language-json">{
+  "device_id": "sensor-07",
+  "temperatura": 34.8,
+  "humedad": 48.2,
+  "salinidad": 0.612,
+  "radiacion": 820.5,
+  "lat": 20.9742,
+  "lon": -89.6213,
+  "estado": "activo"
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="example-col">
+          <h3 class="doc-h3">Ejemplo · Response · 200</h3>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span class="code-lang">JSON</span>
+              <button class="code-copy">Copiar</button>
+            </div>
+<pre><code class="language-json">{
+  "status": "ok"
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="doc-h3">Prueba rápida con curl</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Bash</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/api/sensores \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "sensor-07",
+    "temperatura": 34.8,
+    "humedad": 48.2,
+    "salinidad": 0.612,
+    "radiacion": 820.5,
+    "lat": 20.9742,
+    "lon": -89.6213,
+    "estado": "activo"
+  }'</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== ENDPOINT: GET sensores ===== -->
+    <article id="ep-get-sensores" class="doc-block">
+      <h2 class="doc-h2">Listar sensores procesados</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <code class="endpoint-path">/api/sensores</code>
+        </div>
+        <p class="endpoint-desc">
+          Devuelve el último batch de mediciones procesadas con sus <b>features derivadas</b>
+          (UHI, zona térmica, tipo de superficie, índices de vegetación y energía).
+        </p>
+      </div>
+
+      <h3 class="doc-h3">Ejemplo de respuesta</h3>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">JSON · array</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-json">[
+  {
+    "lat": 20.9769,
+    "lon": -89.6437,
+    "temperatura": 33.65,
+    "humedad": 39.46,
+    "salinidad": 0.895,
+    "radiacion": 869.2,
+    "uhi": 6.25,
+    "zona_termica": "alta",
+    "tipo_superficie": "urbano",
+    "indice_vegetacion": -0.226,
+    "indice_energia": 0.563,
+    "deficit_humedad": 44.87
+  }
+]</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== ENDPOINT: GET grid ===== -->
+    <article id="ep-get-grid" class="doc-block">
+      <h2 class="doc-h2">Obtener grid del mapa de calor</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <code class="endpoint-path">/api/grid</code>
+        </div>
+        <p class="endpoint-desc">
+          Devuelve 2,500 puntos interpolados (IDW · Inverse Distance Weighting) con valores
+          de UHI cubriendo el área de los sensores. Útil para renderizar heatmaps continuos.
+        </p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">JSON · array (truncado)</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-json">[
+  { "lat": 20.9542, "lon": -89.6451, "uhi": 0.0095 },
+  { "lat": 20.9542, "lon": -89.6440, "uhi": 0.0103 },
+  ...
+]</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== ENDPOINT: GET resumen ===== -->
+    <article id="ep-get-resumen" class="doc-block">
+      <h2 class="doc-h2">Resumen global</h2>
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <code class="endpoint-path">/api/resumen</code>
+        </div>
+        <p class="endpoint-desc">
+          Estadísticas agregadas del último batch: temperaturas, humedad, UHI promedio/máx,
+          zona dominante y total de sensores.
+        </p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">JSON</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-json">{
+  "temp_promedio": 31.87,
+  "temp_max": 37.17,
+  "temp_min": 27.40,
+  "humedad_promedio": 57.49,
+  "uhi_promedio": 4.47,
+  "uhi_max": 9.77,
+  "zona_dominante": "alta",
+  "num_sensores": 12,
+  "pipeline_timestamp": "2026-05-16T05:37:11.510Z"
+}</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== SCHEMA ===== -->
+    <article id="schema-payload" class="doc-block">
+      <h2 class="doc-h2">Esquema del payload del sensor</h2>
+      <p>
+        Todos los campos son requeridos para que el pipeline ETL pueda procesar la medición.
+        Si un sensor falla en alguna lectura, omite el envío en lugar de mandar <code>null</code>
+        — el pipeline elimina filas con valores faltantes durante la transformación.
+      </p>
+
+      <div class="schema-grid">
+        <div class="schema-field">
+          <div class="schema-name"><code>device_id</code> <span class="schema-type">string</span></div>
+          <div class="schema-desc">ID único del dispositivo. Usa un esquema consistente, p.ej. <code>sensor-NN</code> o <code>mac:XX:XX:XX:XX:XX:XX</code>.</div>
+        </div>
+        <div class="schema-field">
+          <div class="schema-name"><code>temperatura</code> <span class="schema-type">float · °C</span></div>
+          <div class="schema-desc">Rango esperado: 10 – 50 °C. Sensores recomendados: DHT22, BME280, DS18B20.</div>
+        </div>
+        <div class="schema-field">
+          <div class="schema-name"><code>humedad</code> <span class="schema-type">float · %</span></div>
+          <div class="schema-desc">Humedad relativa 0–100. Mismos sensores que temperatura.</div>
+        </div>
+        <div class="schema-field">
+          <div class="schema-name"><code>salinidad</code> <span class="schema-type">float · ratio</span></div>
+          <div class="schema-desc">Conductividad del suelo normalizada 0–1. Sensor recomendado: capacitivo + EC.</div>
+        </div>
+        <div class="schema-field">
+          <div class="schema-name"><code>radiacion</code> <span class="schema-type">float · W/m²</span></div>
+          <div class="schema-desc">Piranómetro o estimación desde LDR calibrada. Rango: 0 – 1200.</div>
+        </div>
+        <div class="schema-field">
+          <div class="schema-name"><code>lat / lon</code> <span class="schema-type">float · WGS-84</span></div>
+          <div class="schema-desc">Coordenadas fijas del sensor. Si es móvil, lectura del GPS al momento del envío.</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: INSTALL ===== -->
+    <article id="py-install" class="doc-block">
+      <h2 class="doc-h2">Instalación de dependencias</h2>
+      <p>El cliente sensor sólo necesita <code>requests</code> para hablar con la API:</p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Bash</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-bash">pip install requests</code></pre>
+      </div>
+
+      <p>Para dispositivos restringidos (Raspberry Pi Zero, etc.) puedes usar solamente la librería estándar — más adelante mostramos un ejemplo con <code>urllib</code>.</p>
+    </article>
+
+    <!-- ===== PYTHON: BASICO ===== -->
+    <article id="py-basico" class="doc-block">
+      <h2 class="doc-h2">Envío básico desde Python</h2>
+      <p>
+        Caso mínimo: leer un sensor, enviar una medición. Útil para pruebas de conectividad o
+        dispositivos que despiertan, miden y vuelven a dormir.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · sensor_send.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import requests
+
+API_URL = "http://127.0.0.1:8000/api/sensores"
+
+payload = {
+    "device_id":    "sensor-07",
+    "temperatura":  34.8,
+    "humedad":      48.2,
+    "salinidad":    0.612,
+    "radiacion":    820.5,
+    "lat":          20.9742,
+    "lon":         -89.6213,
+    "estado":       "activo",
+}
+
+response = requests.post(API_URL, json=payload, timeout=10)
+response.raise_for_status()
+print("Enviado:", response.json())  # -> {'status': 'ok'}</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Tip.</b> Siempre pasa <code>timeout</code> a <code>requests.post</code>. Sin él, una API
+        caída puede colgar un sensor IoT indefinidamente.
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: CONTINUO ===== -->
+    <article id="py-continuo" class="doc-block">
+      <h2 class="doc-h2">Envío continuo (loop de telemetría)</h2>
+      <p>
+        Caso típico: el dispositivo lee el sensor cada N segundos y envía la medición. Este patrón
+        es lo que corre en producción dentro de los nodos físicos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · sensor_loop.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import time
+import requests
+
+API_URL    = "http://127.0.0.1:8000/api/sensores"
+DEVICE_ID  = "sensor-07"
+LAT, LON   = 20.9742, -89.6213
+INTERVALO  = 60  # segundos entre lecturas
+
+
+def leer_sensor():
+    """Reemplazar por la lectura real de los sensores físicos."""
+    # Ejemplo con Adafruit_DHT (DHT22):
+    #   import Adafruit_DHT
+    #   h, t = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4)
+    return {
+        "temperatura": 34.8,
+        "humedad":     48.2,
+        "salinidad":   0.61,
+        "radiacion":   820.0,
+    }
+
+
+def enviar(medicion: dict) -> bool:
+    payload = {
+        "device_id": DEVICE_ID,
+        "lat":       LAT,
+        "lon":       LON,
+        "estado":    "activo",
+        **medicion,
+    }
+    try:
+        r = requests.post(API_URL, json=payload, timeout=10)
+        r.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        print(f"[{time.strftime('%H:%M:%S')}] error: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    while True:
+        med = leer_sensor()
+        ok  = enviar(med)
+        print(f"[{time.strftime('%H:%M:%S')}] t={med['temperatura']}°C  h={med['humedad']}%  ok={ok}")
+        time.sleep(INTERVALO)</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: RETRY ===== -->
+    <article id="py-retry" class="doc-block">
+      <h2 class="doc-h2">Reintentos y manejo de errores de red</h2>
+      <p>
+        Los sensores suelen estar en redes inestables (WiFi externo, LTE). Implementa reintentos
+        exponenciales con un buffer local para que las mediciones no se pierdan cuando la API esté
+        temporalmente caída.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · sensor_resiliente.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import json
+import time
+import pathlib
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+API_URL    = "http://127.0.0.1:8000/api/sensores"
+BUFFER     = pathlib.Path("./pendientes.jsonl")
+
+# 1 · sesión con reintentos automáticos (backoff exponencial)
+session = requests.Session()
+retries = Retry(
+    total=5,
+    backoff_factor=1.5,          # 1.5, 3, 4.5, 6, 7.5 s
+    status_forcelist=[502, 503, 504],
+    allowed_methods=["POST"],
+)
+session.mount("http://",  HTTPAdapter(max_retries=retries))
+session.mount("https://", HTTPAdapter(max_retries=retries))
+
+
+def guardar_buffer(payload: dict) -> None:
+    """Persistir en disco si la API no respondió."""
+    with BUFFER.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(payload) + "\n")
+
+
+def vaciar_buffer() -> None:
+    """Reintenta enviar los pendientes acumulados."""
+    if not BUFFER.exists():
+        return
+    pendientes = BUFFER.read_text().splitlines()
+    quedan = []
+    for linea in pendientes:
+        try:
+            session.post(API_URL, json=json.loads(linea), timeout=10).raise_for_status()
+        except requests.RequestException:
+            quedan.append(linea)
+    BUFFER.write_text("\n".join(quedan) + ("\n" if quedan else ""))
+
+
+def enviar(payload: dict) -> None:
+    try:
+        session.post(API_URL, json=payload, timeout=10).raise_for_status()
+        vaciar_buffer()
+    except requests.RequestException as e:
+        print("API caída, guardando localmente:", e)
+        guardar_buffer(payload)
+
+
+if __name__ == "__main__":
+    enviar({
+        "device_id":   "sensor-07",
+        "temperatura": 34.8, "humedad": 48.2,
+        "salinidad":   0.61, "radiacion": 820.0,
+        "lat": 20.9742, "lon": -89.6213,
+        "estado": "activo",
+    })</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: BATCH ===== -->
+    <article id="py-batch" class="doc-block">
+      <h2 class="doc-h2">Envío en batch (múltiples sensores)</h2>
+      <p>
+        Cuando un <i>gateway</i> recolecta mediciones de varios sensores (p.ej. por LoRa o BLE) y
+        las reenvía en lote, el patrón es paralelizar las llamadas POST:
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · gateway_batch.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import requests
+from concurrent.futures import ThreadPoolExecutor
+
+API_URL = "http://127.0.0.1:8000/api/sensores"
+
+mediciones = [
+    {"device_id": "sensor-01", "temperatura": 33.1, "humedad": 52.0,
+     "salinidad": 0.71, "radiacion": 780, "lat": 20.97,  "lon": -89.62, "estado": "activo"},
+    {"device_id": "sensor-02", "temperatura": 36.4, "humedad": 41.5,
+     "salinidad": 0.89, "radiacion": 910, "lat": 20.975, "lon": -89.63, "estado": "activo"},
+    {"device_id": "sensor-03", "temperatura": 29.7, "humedad": 71.2,
+     "salinidad": 0.32, "radiacion": 540, "lat": 20.965, "lon": -89.61, "estado": "activo"},
+]
+
+
+def enviar(med):
+    r = requests.post(API_URL, json=med, timeout=10)
+    return med["device_id"], r.status_code
+
+
+with ThreadPoolExecutor(max_workers=8) as pool:
+    for device_id, status in pool.map(enviar, mediciones):
+        print(f"{device_id}: HTTP {status}")</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: CLIENTE ===== -->
+    <article id="py-cliente" class="doc-block">
+      <h2 class="doc-h2">Cliente reutilizable</h2>
+      <p>
+        Una clase pequeña que encapsula la sesión HTTP, ubicación fija del dispositivo y validación
+        de campos. Recomendada para proyectos con varios scripts que envían datos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · islas_client.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import Optional
+import requests
+
+
+@dataclass
+class IslasClient:
+    base_url:   str = "http://127.0.0.1:8000"
+    device_id:  str = "sensor-XX"
+    lat:        float = 0.0
+    lon:        float = 0.0
+    timeout:    float = 10.0
+    _session:   Optional[requests.Session] = None
+
+    def __post_init__(self):
+        self._session = requests.Session()
+
+    def enviar(
+        self,
+        temperatura: float,
+        humedad:     float,
+        salinidad:   float,
+        radiacion:   float,
+        estado:      str = "activo",
+    ) -> dict:
+        payload = {
+            "device_id":   self.device_id,
+            "lat":         self.lat,
+            "lon":         self.lon,
+            "temperatura": temperatura,
+            "humedad":     humedad,
+            "salinidad":   salinidad,
+            "radiacion":   radiacion,
+            "estado":      estado,
+        }
+        r = self._session.post(
+            f"{self.base_url}/api/sensores",
+            json=payload,
+            timeout=self.timeout,
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def resumen(self) -> dict:
+        r = self._session.get(f"{self.base_url}/api/resumen", timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+
+# ---------- uso ----------
+if __name__ == "__main__":
+    cli = IslasClient(
+        base_url="http://127.0.0.1:8000",
+        device_id="sensor-07",
+        lat=20.9742, lon=-89.6213,
+    )
+    cli.enviar(temperatura=34.8, humedad=48.2, salinidad=0.61, radiacion=820.0)
+    print(cli.resumen())</code></pre>
+      </div>
+    </article>
+
+    <!-- ===== PYTHON: RPI ===== -->
+    <article id="py-rpi" class="doc-block">
+      <h2 class="doc-h2">Ejemplo real: Raspberry Pi + DHT22</h2>
+      <p>
+        Integración completa con un sensor físico de temperatura/humedad (DHT22) conectado a una
+        Raspberry Pi. El script lee el GPIO, normaliza, y envía a la API cada minuto.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · rpi_dht22.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">"""
+Hardware:
+  - Raspberry Pi (cualquier modelo con GPIO)
+  - DHT22 en GPIO 4 (temperatura + humedad)
+  - LDR + ADS1115 para radiación aproximada (opcional)
+
+Instalación:
+  pip install adafruit-circuitpython-dht requests
+  sudo apt install libgpiod2
+"""
+import time
+import board
+import adafruit_dht
+import requests
+
+API_URL   = "http://127.0.0.1:8000/api/sensores"
+DEVICE_ID = "rpi-merida-01"
+LAT, LON  = 20.9742, -89.6213
+
+dht = adafruit_dht.DHT22(board.D4)
+
+
+def leer_radiacion_aprox() -> float:
+    """Stub — sustituir por lectura real del piranómetro."""
+    return 750.0
+
+
+def leer_salinidad_aprox() -> float:
+    """Stub — sustituir por sensor capacitivo de suelo."""
+    return 0.55
+
+
+def medir_y_enviar():
+    try:
+        t = dht.temperature
+        h = dht.humidity
+    except RuntimeError as e:
+        # DHT22 falla a veces — ignorar y reintentar al siguiente ciclo.
+        print("lectura fallida:", e)
+        return
+
+    if t is None or h is None:
+        return
+
+    payload = {
+        "device_id":   DEVICE_ID,
+        "temperatura": round(t, 2),
+        "humedad":     round(h, 2),
+        "salinidad":   leer_salinidad_aprox(),
+        "radiacion":   leer_radiacion_aprox(),
+        "lat":         LAT,
+        "lon":         LON,
+        "estado":      "activo",
+    }
+
+    try:
+        r = requests.post(API_URL, json=payload, timeout=10)
+        r.raise_for_status()
+        print(f"[{time.strftime('%H:%M:%S')}] enviado  t={t:.1f}°C  h={h:.1f}%")
+    except requests.RequestException as e:
+        print(f"[{time.strftime('%H:%M:%S')}] error API: {e}")
+
+
+if __name__ == "__main__":
+    while True:
+        medir_y_enviar()
+        time.sleep(60)</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Estrategia de despliegue.</b> Empaqueta el script en un <code>systemd</code> service
+        para que arranque al boot y se reinicie si falla:
+        <code>/etc/systemd/system/islas-sensor.service</code>.
+      </div>
+    </article>
+
+    <!-- =================================================== -->
+    <!-- ===== PYTHON · CONSUMIR DATOS (GET endpoints) ===== -->
+    <!-- =================================================== -->
+
+    <article id="py-get-basico" class="doc-block">
+      <div class="doc-eyebrow">Python · Consumir la API</div>
+      <h2 class="doc-h2">Consulta básica de los endpoints</h2>
+      <p>
+        Para investigadores, periodistas o cualquier consumidor que quiera obtener los datos
+        procesados desde Python. La API expone tres endpoints <code>GET</code> sin autenticación.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · consulta_basica.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import requests
+
+BASE = "http://127.0.0.1:8000"
+
+# 1 · Sensores con features derivadas
+sensores = requests.get(f"{BASE}/api/sensores", timeout=10).json()
+print(f"Sensores activos: {len(sensores)}")
+print("Primer sensor:", sensores[0])
+
+# 2 · Grid interpolado del heatmap (2,500 puntos)
+grid = requests.get(f"{BASE}/api/grid", timeout=10).json()
+print(f"Puntos en grid: {len(grid)}")
+
+# 3 · Resumen global
+resumen = requests.get(f"{BASE}/api/resumen", timeout=10).json()
+print(f"UHI promedio: {resumen['uhi_promedio']:.2f} °C")
+print(f"Zona dominante: {resumen['zona_dominante']}")</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Tip.</b> Los endpoints siempre devuelven el <i>último batch</i> procesado por el pipeline ETL.
+        Para obtener datos históricos, consulta la base de datos MongoDB directamente o exporta
+        snapshots periódicos.
+      </div>
+    </article>
+
+    <article id="py-get-pandas" class="doc-block">
+      <h2 class="doc-h2">Cargar la API a un DataFrame de Pandas</h2>
+      <p>
+        Para análisis tabular, lo más natural es cargar la respuesta de la API directamente a un
+        <code>DataFrame</code>. Útil para estadísticas, agrupaciones, exportes y plots.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · cargar_pandas.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import pandas as pd
+import requests
+
+BASE = "http://127.0.0.1:8000"
+
+# Construye DataFrame directamente desde el JSON
+df = pd.DataFrame(requests.get(f"{BASE}/api/sensores", timeout=10).json())
+
+print(df.head())
+print(f"\nShape: {df.shape}")
+print(f"Columnas: {list(df.columns)}")
+
+# Estadísticas rápidas
+print("\n--- Resumen estadístico ---")
+print(df[["temperatura", "humedad", "uhi", "indice_vegetacion"]].describe())
+
+# Sensores con UHI mayor a 5°C (zonas críticas)
+criticos = df[df["uhi"] > 5].sort_values("uhi", ascending=False)
+print(f"\nSensores en zona crítica: {len(criticos)}")
+print(criticos[["lat", "lon", "temperatura", "uhi", "zona_termica"]])</code></pre>
+      </div>
+    </article>
+
+    <article id="py-get-analisis" class="doc-block">
+      <h2 class="doc-h2">Análisis & estadísticas descriptivas</h2>
+      <p>
+        Ejemplos comunes para investigación: agrupar por zona térmica, calcular correlaciones
+        y detectar valores atípicos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · analisis.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import pandas as pd
+import requests
+
+df = pd.DataFrame(requests.get("http://127.0.0.1:8000/api/sensores").json())
+
+# 1 · Promedio por zona térmica
+print("\n=== Promedios por zona térmica ===")
+print(df.groupby("zona_termica")[["temperatura", "humedad", "uhi"]].mean().round(2))
+
+# 2 · Comparativa urbano vs natural
+print("\n=== Urbano vs Natural ===")
+print(df.groupby("tipo_superficie").agg(
+    sensores=("device_id", "count"),
+    temp_promedio=("temperatura", "mean"),
+    uhi_promedio=("uhi", "mean"),
+    humedad_promedio=("humedad", "mean"),
+).round(2))
+
+# 3 · Correlación entre variables ambientales
+print("\n=== Matriz de correlación ===")
+cols = ["temperatura", "humedad", "radiacion", "salinidad", "uhi"]
+print(df[cols].corr().round(2))
+
+# 4 · Sensores en el percentil 90 de UHI
+p90 = df["uhi"].quantile(0.90)
+print(f"\nPercentil 90 de UHI: {p90:.2f}°C")
+print(df[df["uhi"] >= p90][["lat", "lon", "uhi", "temperatura", "tipo_superficie"]])</code></pre>
+      </div>
+    </article>
+
+    <article id="py-get-plot" class="doc-block">
+      <h2 class="doc-h2">Visualizar el heatmap localmente</h2>
+      <p>
+        Renderiza el grid interpolado con <code>matplotlib</code> para reproducir el mapa de calor
+        en notebooks, papers o reportes.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · plot_heatmap.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+import requests
+
+# 1 · Datos
+grid     = requests.get("http://127.0.0.1:8000/api/grid").json()
+sensores = requests.get("http://127.0.0.1:8000/api/sensores").json()
+
+lats = np.array([p["lat"] for p in grid])
+lons = np.array([p["lon"] for p in grid])
+uhis = np.array([p["uhi"] for p in grid])
+
+# 2 · Reconstruir matriz cuadrada (50x50)
+n = int(np.sqrt(len(grid)))
+LATS = lats.reshape(n, n)
+LONS = lons.reshape(n, n)
+UHIS = uhis.reshape(n, n)
+
+# 3 · Render
+fig, ax = plt.subplots(figsize=(10, 8))
+heatmap = ax.pcolormesh(LONS, LATS, UHIS, cmap="RdYlBu_r", shading="auto")
+cbar = fig.colorbar(heatmap, ax=ax)
+cbar.set_label("UHI (°C)", fontsize=11)
+
+# 4 · Sobreponer sensores
+for s in sensores:
+    ax.scatter(s["lon"], s["lat"],
+               c="white", edgecolors="black", s=80, zorder=5)
+    ax.annotate(f"{s['temperatura']:.1f}°", (s["lon"], s["lat"]),
+                xytext=(5, 5), textcoords="offset points", fontsize=8)
+
+ax.set_title("Islas de calor urbanas · Mérida, Yucatán", fontsize=14, fontweight="bold")
+ax.set_xlabel("Longitud")
+ax.set_ylabel("Latitud")
+plt.tight_layout()
+plt.savefig("heatmap_merida.png", dpi=200)
+plt.show()</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Dependencias.</b> <code>pip install matplotlib numpy requests</code>
+      </div>
+    </article>
+
+    <article id="py-get-export" class="doc-block">
+      <h2 class="doc-h2">Exportar a CSV / Excel</h2>
+      <p>
+        Snapshot completo de los datos en disco para análisis offline, archivo histórico o
+        compartir con equipos no técnicos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · export_snapshot.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">"""
+Crea un snapshot fechado de toda la información de la API.
+Salida:  islas_calor_YYYY-MM-DD/
+            ├── sensores.csv
+            ├── grid.csv
+            ├── resumen.json
+            └── reporte_completo.xlsx
+"""
+import json
+import requests
+import pandas as pd
+from datetime import datetime
+from pathlib import Path
+
+BASE = "http://127.0.0.1:8000"
+
+# 1 · Descargar
+sensores = requests.get(f"{BASE}/api/sensores").json()
+grid     = requests.get(f"{BASE}/api/grid").json()
+resumen  = requests.get(f"{BASE}/api/resumen").json()
+
+# 2 · Carpeta de salida
+fecha = datetime.now().strftime("%Y-%m-%d")
+out   = Path(f"islas_calor_{fecha}")
+out.mkdir(exist_ok=True)
+
+# 3 · CSV
+pd.DataFrame(sensores).to_csv(out / "sensores.csv", index=False, encoding="utf-8")
+pd.DataFrame(grid).to_csv(out / "grid.csv", index=False, encoding="utf-8")
+(out / "resumen.json").write_text(json.dumps(resumen, indent=2, default=str), encoding="utf-8")
+
+# 4 · Excel multi-hoja
+with pd.ExcelWriter(out / "reporte_completo.xlsx", engine="openpyxl") as xw:
+    pd.DataFrame(sensores).to_excel(xw, sheet_name="Sensores", index=False)
+    pd.DataFrame(grid).to_excel(xw, sheet_name="Grid_UHI", index=False)
+    pd.DataFrame([resumen]).to_excel(xw, sheet_name="Resumen", index=False)
+
+print(f"Snapshot guardado en {out.resolve()}")
+print(f"  - {len(sensores)} sensores")
+print(f"  - {len(grid)} puntos de grid")</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Dependencias.</b> <code>pip install pandas openpyxl requests</code>
+      </div>
+    </article>
+
+    <article id="py-get-async" class="doc-block">
+      <h2 class="doc-h2">Consulta asíncrona (aiohttp)</h2>
+      <p>
+        Cuando se necesita consultar muchos endpoints en paralelo o integrar con un servicio
+        asíncrono (bot, API gateway, scraper), <code>aiohttp</code> reduce drásticamente el
+        tiempo total.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · async_fetch.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import asyncio
+import aiohttp
+
+BASE = "http://127.0.0.1:8000"
+ENDPOINTS = ["/api/sensores", "/api/grid", "/api/resumen"]
+
+
+async def fetch(session, path):
+    async with session.get(f"{BASE}{path}", timeout=10) as r:
+        return path, await r.json()
+
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        resultados = await asyncio.gather(*[fetch(session, p) for p in ENDPOINTS])
+
+    for path, data in resultados:
+        size = len(data) if isinstance(data, list) else 1
+        print(f"{path:25s} → {size} registros")
+    return dict(resultados)
+
+
+datos = asyncio.run(main())
+print(f"\nUHI promedio actual: {datos['/api/resumen']['uhi_promedio']:.2f} °C")</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Dependencias.</b> <code>pip install aiohttp</code>
+      </div>
+    </article>
+
+    <article id="py-get-poll" class="doc-block">
+      <h2 class="doc-h2">Polling continuo & monitoreo</h2>
+      <p>
+        Watcher que consulta el resumen cada N segundos y alerta cuando el UHI máximo cruza
+        un umbral configurable. Útil para integraciones con Slack, email o sistemas de alerta
+        temprana.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · monitor.py</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python">import time
+import requests
+from datetime import datetime
+
+BASE         = "http://127.0.0.1:8000"
+UMBRAL_UHI   = 8.0   # °C — alertar cuando UHI máximo supere este valor
+INTERVALO    = 60    # segundos
+
+estado_previo = None
+
+
+def check():
+    global estado_previo
+    try:
+        r = requests.get(f"{BASE}/api/resumen", timeout=10).json()
+        uhi_max = r.get("uhi_max", 0)
+        zona    = r.get("zona_dominante", "—")
+        ts      = datetime.now().strftime("%H:%M:%S")
+
+        alerta = uhi_max >= UMBRAL_UHI
+        estado = "ALERTA" if alerta else "ok"
+
+        print(f"[{ts}]  UHI_max={uhi_max:.2f}°C  zona={zona}  → {estado}")
+
+        # Notificar cambios de estado (transición)
+        if alerta and estado_previo != "ALERTA":
+            print(">>> ALERTA · Umbral de UHI superado")
+            # aquí: enviar webhook a Slack, email, etc.
+        estado_previo = estado
+
+    except requests.RequestException as e:
+        print("error:", e)
+
+
+if __name__ == "__main__":
+    while True:
+        check()
+        time.sleep(INTERVALO)</code></pre>
+      </div>
+
+      <div class="alert alert-warn">
+        <b>Producción.</b> Para alertas en sistemas críticos usa <code>tenacity</code> o
+        <code>backoff</code> para reintentos robustos, y persiste el estado en disco para
+        sobrevivir reinicios.
+      </div>
+    </article>
+
+    <!-- ===== CODES ===== -->
+    <article id="codes" class="doc-block">
+      <h2 class="doc-h2">Códigos de respuesta</h2>
+      <table class="param-table">
+        <thead><tr><th>Código</th><th>Significado</th><th>Acción del cliente</th></tr></thead>
+        <tbody>
+          <tr><td><span class="code-tag ok">200</span></td><td>Operación exitosa</td><td>Continuar normalmente</td></tr>
+          <tr><td><span class="code-tag warn">422</span></td><td>JSON inválido o campos faltantes</td><td>Revisar payload antes de reintentar</td></tr>
+          <tr><td><span class="code-tag err">500</span></td><td>Error interno (p.ej. base de datos caída)</td><td>Reintentar con backoff exponencial</td></tr>
+          <tr><td><span class="code-tag err">503</span></td><td>Servicio no disponible</td><td>Buffer local + reintento</td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <!-- ===== PIPELINE ===== -->
+    <article id="pipeline" class="doc-block">
+      <h2 class="doc-h2">Pipeline interno de procesamiento</h2>
+      <p>Cuando un sensor envía datos, el flujo completo es:</p>
+
+      <ol class="pipeline-list">
+        <li><b>Ingesta</b> — <code>POST /api/sensores</code> inserta en <code>SensoresRaw</code> (MongoDB).</li>
+        <li><b>Extract</b> — cada 5 min el scheduler lee todos los documentos crudos.</li>
+        <li><b>Transform</b> — calcula UHI, normalizaciones, índices y clasifica zonas térmicas.</li>
+        <li><b>Load features</b> — escribe en <code>mediciones_analitica</code>.</li>
+        <li><b>Interpolación IDW</b> — genera 2,500 puntos para el heatmap.</li>
+        <li><b>Load grid + resumen</b> — escribe <code>mapa_calor_actual</code> y <code>resumen_ambiental</code>.</li>
+        <li><b>Exposición</b> — los endpoints <code>GET</code> sirven el último batch al frontend.</li>
+      </ol>
+
+      <div class="alert alert-info">
+        <b>Tiempo hasta verse en el dashboard.</b> Hasta 5 minutos (latencia del scheduler).
+        Para procesamiento inmediato, ejecuta manualmente <code>python -m dags.weather_pipeline</code>.
+      </div>
+    </article>
+
+    <div class="docs-footer">
+      <div>Islas de Calor · API v1.0</div>
+      <div>Mérida, Yucatán · 2026</div>
+    </div>
+
+  </div>
+</section>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from pymongo import MongoClient
 from datetime import datetime
 import os
+
 import threading
 import time
-
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from dags.weather_pipeline import run_pipeline
 from dotenv import load_dotenv
 load_dotenv()

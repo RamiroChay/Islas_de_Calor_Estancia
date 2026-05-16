@@ -2,46 +2,1777 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Islas de Calor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Islas de Calor · Plataforma colaborativa de monitoreo urbano — Mérida</title>
+<meta name="description" content="Red abierta de sensores que mapea las islas de calor en Mérida, Yucatán. Datos en tiempo real, API pública y visualización interactiva para investigadores, gobiernos y ciudadanía.">
 
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="landing.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
 
 </head>
-
 <body>
 
-<div class="header">
-  <div>ÚLTIMA ACTUALIZACIÓN: <span id="timestamp">---</span></div>
+<!-- ===== NAV ===== -->
+<header class="ln-nav" id="ln-nav">
+  <div class="ln-nav-inner">
 
-  <div class="icons">
-    <!-- 🔧 REEMPLAZAR POR ICONOS REALES EN /assets -->
-    <div class="icon">☀️</div>
-    <div class="icon">💧</div>
-    <div class="icon">🌿</div>
+    <a class="ln-brand" href="#top">
+      <span class="ln-brand-mark">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+        </svg>
+      </span>
+      <span class="ln-brand-text">
+        <span class="ln-brand-title">Islas de Calor</span>
+        <span class="ln-brand-sub">Mérida · Yucatán</span>
+      </span>
+    </a>
+
+    <nav class="ln-menu">
+      <a href="#proyecto">Proyecto</a>
+      <a href="#como">Arquitectura</a>
+      <a href="#universidades">Universidades</a>
+      <a href="#roadmap">Hoja de ruta</a>
+      <a href="#" data-open-api>API</a>
+    </nav>
+
+    <div class="ln-nav-cta">
+      <span class="ln-status-pill" id="ln-status">
+        <span class="ln-dot"></span>
+        <span id="ln-status-text">Conectando…</span>
+      </span>
+      <a class="ln-btn ln-btn-primary" href="app.html">
+        Ver mapa
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+
+  </div>
+</header>
+
+<!-- ===== HERO · split layout · v2 ===== -->
+<section class="ln-hero" id="top">
+
+  <div class="ln-hero-map" id="hero-map" aria-hidden="true"></div>
+  <div class="ln-hero-overlay" aria-hidden="true"></div>
+
+  <!-- HUD superior derecho · location -->
+  <div class="ln-hud-loc" aria-hidden="true">
+    <div class="ln-hud-loc-dot"></div>
+    <div>
+      <div class="ln-hud-loc-name">MÉRIDA · YUCATÁN</div>
+      <div class="ln-hud-loc-coord">20.97° N · 89.62° W · MX</div>
+    </div>
+  </div>
+
+  <!-- HUD inferior derecho · stats en vivo -->
+  <div class="ln-hud-stats" aria-hidden="true">
+    <div class="ln-hud-stat">
+      <div class="ln-hud-stat-lbl">UHI MAX</div>
+      <div class="ln-hud-stat-val warn" id="readout-uhi">—°C</div>
+    </div>
+    <div class="ln-hud-stat">
+      <div class="ln-hud-stat-lbl">SENSORES</div>
+      <div class="ln-hud-stat-val" id="readout-sensors">—</div>
+    </div>
+    <div class="ln-hud-stat">
+      <div class="ln-hud-stat-lbl">STATUS</div>
+      <div class="ln-hud-stat-val ln-live"><span class="ln-live-dot"></span>EN VIVO</div>
+    </div>
+  </div>
+
+  <!-- Hero card · contenido principal -->
+  <div class="ln-hero-grid-layout">
+    <div class="ln-hero-card">
+
+      <div class="ln-hero-eyebrow">
+        <span class="ln-hero-eyebrow-dot"></span>
+        <span>Plataforma colaborativa · Monitoreo urbano</span>
+      </div>
+
+      <h1 class="ln-hero-h1">
+        Mapeando las<br>
+        <span class="ln-hero-h1-accent">islas de calor</span><br>
+        en Mérida.
+      </h1>
+
+      <p class="ln-hero-lead">
+        Red abierta de sensores y datos públicos que monitorea en tiempo real las
+        temperaturas urbanas y rurales en la Península de Yucatán. Análisis abiertos
+        para investigadores, gobiernos y ciudadanía.
+      </p>
+
+      <div class="ln-hero-cta">
+        <a class="ln-btn ln-btn-primary ln-btn-lg" href="app.html">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Explorar mapa interactivo
+        </a>
+        <a class="ln-btn ln-btn-ghost ln-btn-lg" href="#" data-open-api>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Documentación API
+        </a>
+      </div>
+
+      <!-- Trust bar · mini stats + institutions -->
+      <div class="ln-hero-trust">
+        <div class="ln-trust-stats">
+          <div class="ln-trust-stat">
+            <div class="ln-trust-num" id="hero-trust-sensors">—</div>
+            <div class="ln-trust-lbl">Sensores</div>
+          </div>
+          <div class="ln-trust-divider"></div>
+          <div class="ln-trust-stat">
+            <div class="ln-trust-num" id="hero-trust-grid">—</div>
+            <div class="ln-trust-lbl">Puntos · grid</div>
+          </div>
+          <div class="ln-trust-divider"></div>
+          <div class="ln-trust-stat">
+            <div class="ln-trust-num">5<span>min</span></div>
+            <div class="ln-trust-lbl">Refresh</div>
+          </div>
+          <div class="ln-trust-divider"></div>
+          <div class="ln-trust-stat">
+            <div class="ln-trust-num">100<span>%</span></div>
+            <div class="ln-trust-lbl">Abierto</div>
+          </div>
+        </div>
+
+        <div class="ln-trust-inst">
+          <span class="ln-trust-inst-lbl">Iniciativa de</span>
+          <div class="ln-trust-inst-logos">
+            <a href="https://www.upy.edu.mx" target="_blank" rel="noopener" class="ln-trust-inst-pill">UPY</a>
+            <span class="ln-trust-inst-sep">×</span>
+            <a href="https://tecdesoftware.edu.mx" target="_blank" rel="noopener" class="ln-trust-inst-pill">Tec de Software</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Lado derecho intencionalmente vacío para que el mapa respire -->
+    <div class="ln-hero-spacer" aria-hidden="true"></div>
+  </div>
+
+  <!-- Scroll cue inferior -->
+  <div class="ln-scroll-cue">
+    <span class="ln-scroll-line"></span>
+    <span class="ln-scroll-text">Desplázate para conocer más</span>
+  </div>
+</section>
+
+<!-- ===== STATS STRIP ===== -->
+<section class="ln-stats">
+  <div class="ln-container">
+    <div class="ln-stats-grid">
+      <div class="ln-stat">
+        <div class="ln-stat-value" id="stat-sensors">—</div>
+        <div class="ln-stat-label">Sensores en red</div>
+      </div>
+      <div class="ln-stat">
+        <div class="ln-stat-value" id="stat-grid">—</div>
+        <div class="ln-stat-label">Puntos interpolados</div>
+      </div>
+      <div class="ln-stat">
+        <div class="ln-stat-value" id="stat-uhi">—<span class="ln-stat-unit">°C</span></div>
+        <div class="ln-stat-label">UHI máximo actual</div>
+      </div>
+      <div class="ln-stat">
+        <div class="ln-stat-value">5<span class="ln-stat-unit">min</span></div>
+        <div class="ln-stat-label">Ciclo de actualización</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OBJETIVO FORMAL ===== -->
+<section class="ln-section ln-objetivo" id="proyecto">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">01</div>
+      <div>
+        <div class="ln-section-kicker">Marco del proyecto</div>
+        <h2 class="ln-h2">Prototipo de plataforma de datos meteorológicos<br>para el análisis de islas de calor en Mérida</h2>
+      </div>
+    </div>
+
+    <div class="ln-objetivo-grid">
+
+      <div class="ln-objetivo-card primary">
+        <div class="ln-objetivo-label">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          Objetivo
+        </div>
+        <p class="ln-objetivo-text">
+          Diseñar e implementar un prototipo de plataforma en línea para la
+          <b>integración, almacenamiento y visualización</b> de datos meteorológicos
+          provenientes de <mark>diversas fuentes públicas en México</mark>, dejando
+          preparada la infraestructura de datos para la
+          <mark>futura incorporación de información generada por dispositivos de medición</mark>,
+          con el fin de apoyar el análisis de islas de calor en la ciudad de Mérida.
+        </p>
+      </div>
+
+      <div class="ln-objetivo-card">
+        <div class="ln-objetivo-label">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          Descripción
+        </div>
+        <p class="ln-objetivo-text">
+          El proyecto consiste en el desarrollo de un prototipo de plataforma en línea
+          orientada a la gestión de datos meteorológicos, integrando información
+          <b>histórica y actual</b> proveniente de distintas bases de datos públicas
+          disponibles en México. La plataforma permitirá el almacenamiento estructurado,
+          consulta y visualización de variables como
+          <mark>temperatura, humedad relativa, radiación y evapotranspiración</mark>.
+          Asimismo, se diseñará el modelo de datos y la arquitectura necesaria para el
+          registro futuro de información capturada por un
+          <mark>dispositivo de medición meteorológica</mark> que será desarrollado
+          posteriormente. El proyecto tiene como finalidad sentar las bases para el
+          análisis espacial y temporal de islas de calor urbano en Mérida, integrando
+          principios de <b>ingeniería de datos</b> y <b>sistemas de información</b>.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Variables monitoreadas -->
+    <div class="ln-vars">
+      <div class="ln-vars-header">
+        <div class="ln-vars-kicker">Variables monitoreadas</div>
+        <h3 class="ln-vars-title">Cuatro indicadores físicos críticos</h3>
+      </div>
+
+      <div class="ln-vars-grid">
+        <div class="ln-var">
+          <div class="ln-var-icon temp">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          </div>
+          <div class="ln-var-name">Temperatura</div>
+          <div class="ln-var-unit">°C</div>
+          <div class="ln-var-desc">Indicador primario del efecto UHI. Diferencias urbano-rural &gt; 5°C.</div>
+        </div>
+
+        <div class="ln-var">
+          <div class="ln-var-icon hum">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          </div>
+          <div class="ln-var-name">Humedad relativa</div>
+          <div class="ln-var-unit">%</div>
+          <div class="ln-var-desc">Capacidad evaporativa del aire. Modula la sensación térmica real.</div>
+        </div>
+
+        <div class="ln-var">
+          <div class="ln-var-icon rad">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </div>
+          <div class="ln-var-name">Radiación solar</div>
+          <div class="ln-var-unit">W/m²</div>
+          <div class="ln-var-desc">Carga energética incidente. Determinante en superficies impermeables.</div>
+        </div>
+
+        <div class="ln-var">
+          <div class="ln-var-icon evap">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M5 18a7 7 0 0 1 14 0"/><path d="M3 22h18"/></svg>
+          </div>
+          <div class="ln-var-name">Evapotranspiración</div>
+          <div class="ln-var-unit">mm/día</div>
+          <div class="ln-var-desc">Pérdida de agua por evaporación y transpiración vegetal. Indica cobertura verde.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== ¿QUÉ ES UHI? ===== -->
+<section class="ln-section ln-section-soft" id="uhi">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">02</div>
+      <div>
+        <div class="ln-section-kicker">Contexto científico</div>
+        <h2 class="ln-h2">¿Qué es una isla de calor urbana?</h2>
+      </div>
+    </div>
+
+    <div class="ln-two-col">
+      <div class="ln-prose">
+        <p>
+          Una <b>isla de calor urbana (UHI · Urban Heat Island)</b> es el fenómeno por el cual
+          las ciudades registran temperaturas significativamente más altas que las zonas rurales
+          o vegetadas circundantes. El asfalto, el concreto y la ausencia de vegetación absorben
+          y re-emiten calor, elevando hasta <b>10 °C</b> la temperatura efectiva en horarios pico.
+        </p>
+        <p>
+          En la Península de Yucatán este efecto se intensifica por la combinación de
+          radiación solar elevada, humedad ambiental y crecimiento urbano acelerado. La
+          plataforma <b>Islas de Calor</b> documenta, mide y visualiza este fenómeno de
+          manera abierta para informar políticas públicas, decisiones urbanísticas y
+          esfuerzos comunitarios de adaptación al cambio climático.
+        </p>
+
+        <ul class="ln-bullets">
+          <li><b>Datos abiertos</b> — todas las mediciones están disponibles vía API REST y descargas en CSV/Excel.</li>
+          <li><b>Tiempo real</b> — pipeline ETL automatizado cada 5 minutos.</li>
+          <li><b>Geo-referenciado</b> — interpolación espacial sobre grid de 2,500 puntos.</li>
+          <li><b>Reproducible</b> — metodología publicada y código abierto.</li>
+        </ul>
+      </div>
+
+      <div class="ln-visual">
+        <div class="ln-uhi-viz">
+          <div class="ln-uhi-label rural">Zona rural<br><b>27.4°C</b></div>
+          <div class="ln-uhi-bar">
+            <div class="ln-uhi-gradient"></div>
+            <div class="ln-uhi-marker rural-mark"></div>
+            <div class="ln-uhi-marker urban-mark"></div>
+          </div>
+          <div class="ln-uhi-label urban">Zona urbana<br><b>37.2°C</b></div>
+          <div class="ln-uhi-delta">
+            <div class="ln-uhi-delta-label">Diferencia UHI</div>
+            <div class="ln-uhi-delta-value">+9.8 °C</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== FUENTES INSTITUCIONALES ===== -->
+<section class="ln-section ln-fuentes">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">03</div>
+      <div>
+        <div class="ln-section-kicker">Fuentes públicas de datos</div>
+        <h2 class="ln-h2">Integramos información institucional<br>de organismos oficiales en México</h2>
+      </div>
+    </div>
+
+    <p class="ln-fuentes-lead">
+      La plataforma consolida datos meteorológicos provenientes de <b>cuatro fuentes
+      gubernamentales y académicas</b> reconocidas, garantizando trazabilidad, calidad
+      e interoperabilidad con los estándares oficiales del país.
+    </p>
+
+    <div class="ln-fuentes-grid">
+
+      <div class="ln-fuente">
+        <div class="ln-fuente-badge smn">SMN</div>
+        <div class="ln-fuente-name">Servicio Meteorológico Nacional</div>
+        <div class="ln-fuente-org">CONAGUA · Gobierno de México</div>
+        <p class="ln-fuente-desc">
+          Pronósticos, climatología histórica, modelos numéricos, observación
+          satelital y boletines de fenómenos extremos a nivel nacional.
+        </p>
+        <div class="ln-fuente-tags">
+          <span>Histórico</span><span>Pronóstico</span><span>Climatología</span>
+        </div>
+      </div>
+
+      <div class="ln-fuente">
+        <div class="ln-fuente-badge inegi">INEGI</div>
+        <div class="ln-fuente-name">Instituto Nacional de Estadística y Geografía</div>
+        <div class="ln-fuente-org">Organismo autónomo · INEGI</div>
+        <p class="ln-fuente-desc">
+          Datos geoespaciales, marcos geoestadísticos, uso de suelo, capa vegetal
+          e infraestructura urbana georreferenciada de México.
+        </p>
+        <div class="ln-fuente-tags">
+          <span>Geoespacial</span><span>Demografía</span><span>Cartografía</span>
+        </div>
+      </div>
+
+      <div class="ln-fuente">
+        <div class="ln-fuente-badge uady">UADY</div>
+        <div class="ln-fuente-name">CIAFEME — Comité Institucional para la Atención de Fenómenos Meteorológicos Extremos</div>
+        <div class="ln-fuente-org">Universidad Autónoma de Yucatán</div>
+        <p class="ln-fuente-desc">
+          Boletines meteorológicos especializados en la región Sureste, monitoreo
+          de ciclones tropicales y temporadas de huracanes.
+        </p>
+        <div class="ln-fuente-tags">
+          <span>Regional</span><span>Académico</span><span>Boletines</span>
+        </div>
+      </div>
+
+      <div class="ln-fuente">
+        <div class="ln-fuente-badge chr">CHR</div>
+        <div class="ln-fuente-name">Centro Hidrometeorológico Regional Mérida</div>
+        <div class="ln-fuente-org">CONAGUA · Yucatán</div>
+        <p class="ln-fuente-desc">
+          Pronósticos a 24 y 96 h, avisos de tormenta y reportes hidroclimatológicos
+          específicos para la Península de Yucatán.
+        </p>
+        <div class="ln-fuente-tags">
+          <span>Local</span><span>Hidroclimatología</span><span>Tiempo real</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CÓMO FUNCIONA ===== -->
+<section class="ln-section ln-section-dark" id="como">
+  <div class="ln-container">
+
+    <div class="ln-section-header light">
+      <div class="ln-section-num light">04</div>
+      <div>
+        <div class="ln-section-kicker light">Arquitectura técnica</div>
+        <h2 class="ln-h2 light">Pipeline de ingeniería de datos</h2>
+      </div>
+    </div>
+
+    <div class="ln-pipeline">
+
+      <div class="ln-step">
+        <div class="ln-step-num">1</div>
+        <div class="ln-step-icon">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
+        </div>
+        <h3 class="ln-step-title">Sensores en campo</h3>
+        <p class="ln-step-text">
+          Dispositivos distribuidos miden temperatura, humedad, radiación solar y
+          salinidad del suelo cada minuto, con coordenadas GPS fijas o móviles.
+        </p>
+        <div class="ln-step-tech">DHT22 · BME280 · Raspberry Pi · ESP32</div>
+      </div>
+
+      <div class="ln-step-arrow">→</div>
+
+      <div class="ln-step">
+        <div class="ln-step-num">2</div>
+        <div class="ln-step-icon">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <h3 class="ln-step-title">Pipeline analítico</h3>
+        <p class="ln-step-text">
+          ETL automatizado calcula UHI, normaliza variables, deriva índices de
+          vegetación y energía, y clasifica zonas térmicas usando referencias físicas.
+        </p>
+        <div class="ln-step-tech">Python · Pandas · NumPy · MongoDB</div>
+      </div>
+
+      <div class="ln-step-arrow">→</div>
+
+      <div class="ln-step">
+        <div class="ln-step-num">3</div>
+        <div class="ln-step-icon">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </div>
+        <h3 class="ln-step-title">Visualización abierta</h3>
+        <p class="ln-step-text">
+          Heatmap interactivo, dashboard de KPIs, API REST pública y descargas
+          en CSV/Excel para investigadores, periodistas y tomadores de decisiones.
+        </p>
+        <div class="ln-step-tech">FastAPI · Leaflet · IDW · REST</div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== COLABORACIÓN UNIVERSITARIA ===== -->
+<section class="ln-section ln-uni-section" id="universidades">
+
+  <div class="ln-uni-bg" aria-hidden="true"></div>
+  <div class="ln-uni-glow ln-uni-glow-1" aria-hidden="true"></div>
+  <div class="ln-uni-glow ln-uni-glow-2" aria-hidden="true"></div>
+
+  <div class="ln-container">
+
+    <div class="ln-uni-header">
+      <div class="ln-section-num" style="margin: 0 auto 24px; display: inline-block;">05</div>
+      <div class="ln-uni-eyebrow">
+        <span class="ln-uni-eyebrow-dot"></span>
+        Proyecto colaborativo · Yucatán 2026
+      </div>
+      <h2 class="ln-uni-title">
+        Dos universidades.<br>
+        <span class="ln-uni-title-accent">Una misión climática.</span>
+      </h2>
+      <p class="ln-uni-lead">
+        Esta plataforma nace de la alianza entre dos instituciones líderes en el sureste mexicano,
+        que combinan <b>rigor científico</b>, <b>formación técnica de vanguardia</b> y
+        <b>compromiso con las comunidades</b> ante el cambio climático urbano.
+      </p>
+    </div>
+
+    <div class="ln-uni-cards">
+
+      <a class="ln-uni-card upy" href="https://www.upy.edu.mx" target="_blank" rel="noopener">
+        <div class="ln-uni-card-glow"></div>
+        <div class="ln-uni-card-tag">Investigación científica</div>
+
+        <div class="ln-uni-logo-wrap">
+          <img src="assets/upy-logo.png" alt="Universidad Politécnica de Yucatán" class="ln-uni-logo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-uni-logo-ph">UPY</div>
+        </div>
+
+        <div class="ln-uni-card-body">
+          <h3 class="ln-uni-card-name">Universidad Politécnica<br>de Yucatán</h3>
+          <p class="ln-uni-card-text">
+            Liderazgo académico en investigación aplicada, instrumentación de sensores y
+            análisis climatológico para la región Sureste. Aporta el marco metodológico
+            y el rigor científico del proyecto.
+          </p>
+
+          <div class="ln-uni-card-meta">
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Rol</span>
+              <span class="ln-uni-meta-val">Investigación & metodología</span>
+            </div>
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Sede</span>
+              <span class="ln-uni-meta-val">Mérida, Yucatán</span>
+            </div>
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Programa</span>
+              <span class="ln-uni-meta-val">Estancias de Investigación 2026</span>
+            </div>
+          </div>
+
+          <span class="ln-uni-card-link">
+            Visitar upy.edu.mx
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <div class="ln-uni-cross">
+        <div class="ln-uni-cross-circle">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18"/>
+          </svg>
+        </div>
+        <div class="ln-uni-cross-label">Colaboración</div>
+      </div>
+
+      <a class="ln-uni-card tec" href="https://tecdesoftware.edu.mx" target="_blank" rel="noopener">
+        <div class="ln-uni-card-glow"></div>
+        <div class="ln-uni-card-tag">Desarrollo técnico</div>
+
+        <div class="ln-uni-logo-wrap">
+          <img src="assets/software-logo.png" alt="Tecnológico de Software" class="ln-uni-logo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-uni-logo-ph">TS</div>
+        </div>
+
+        <div class="ln-uni-card-body">
+          <h3 class="ln-uni-card-name">Tecnológico<br>de Software</h3>
+          <p class="ln-uni-card-text">
+            Centro especializado en ingeniería de software y tecnologías emergentes.
+            Aporta la arquitectura técnica de la plataforma: backend, pipeline ETL,
+            visualización y API pública.
+          </p>
+
+          <div class="ln-uni-card-meta">
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Rol</span>
+              <span class="ln-uni-meta-val">Plataforma & ingeniería</span>
+            </div>
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Stack</span>
+              <span class="ln-uni-meta-val">FastAPI · MongoDB · Leaflet</span>
+            </div>
+            <div class="ln-uni-meta-row">
+              <span class="ln-uni-meta-lbl">Enfoque</span>
+              <span class="ln-uni-meta-val">Datos abiertos & software libre</span>
+            </div>
+          </div>
+
+          <span class="ln-uni-card-link">
+            Visitar tecdesoftware.edu.mx
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Impact strip -->
+    <div class="ln-uni-impact">
+      <div class="ln-uni-impact-item">
+        <div class="ln-uni-impact-num">2</div>
+        <div class="ln-uni-impact-label">Instituciones aliadas</div>
+      </div>
+      <div class="ln-uni-impact-divider"></div>
+      <div class="ln-uni-impact-item">
+        <div class="ln-uni-impact-num">100<span>%</span></div>
+        <div class="ln-uni-impact-label">Datos abiertos al público</div>
+      </div>
+      <div class="ln-uni-impact-divider"></div>
+      <div class="ln-uni-impact-item">
+        <div class="ln-uni-impact-num">∞</div>
+        <div class="ln-uni-impact-label">Comunidades beneficiadas</div>
+      </div>
+    </div>
+
+    <!-- Quote -->
+    <blockquote class="ln-uni-quote">
+      <div class="ln-uni-quote-mark">"</div>
+      <p class="ln-uni-quote-text">
+        Construimos infraestructura pública de datos climáticos para que los gobiernos,
+        las comunidades y la academia tomen decisiones informadas frente al calentamiento
+        urbano. <b>La ciencia abierta es una herramienta de justicia territorial.</b>
+      </p>
+      <footer class="ln-uni-quote-foot">
+        Equipo Islas de Calor · Mérida 2026
+      </footer>
+    </blockquote>
+
+  </div>
+</section>
+
+<!-- ===== HOJA DE RUTA ===== -->
+<section class="ln-section ln-section-soft" id="roadmap">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">06</div>
+      <div>
+        <div class="ln-section-kicker">Hoja de ruta</div>
+        <h2 class="ln-h2">Actividades del proyecto en tres fases</h2>
+      </div>
+    </div>
+
+    <p class="ln-fuentes-lead">
+      El proyecto se ejecuta en <b>ocho actividades estructuradas</b> agrupadas en tres
+      fases: investigación documental, desarrollo de la plataforma y preparación para
+      la incorporación futura de dispositivos físicos de medición.
+    </p>
+
+    <div class="ln-phases">
+
+      <div class="ln-phase">
+        <div class="ln-phase-header">
+          <div class="ln-phase-badge done">Fase 1</div>
+          <div class="ln-phase-title">Investigación y modelado</div>
+          <div class="ln-phase-status done">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Completada
+          </div>
+        </div>
+        <ul class="ln-phase-list">
+          <li>
+            <span class="ln-act-num">01</span>
+            <div>
+              <div class="ln-act-title">Investigación de fuentes públicas de datos meteorológicos en México</div>
+              <div class="ln-act-meta">SMN · INEGI · UADY · CHR</div>
+            </div>
+          </li>
+          <li>
+            <span class="ln-act-num">02</span>
+            <div>
+              <div class="ln-act-title">Análisis de variables relevantes para estudios de islas de calor</div>
+              <div class="ln-act-meta">Temperatura · Humedad · Radiación · Evapotranspiración</div>
+            </div>
+          </li>
+          <li>
+            <span class="ln-act-num">03</span>
+            <div>
+              <div class="ln-act-title">Diseño del modelo de datos para información meteorológica</div>
+              <div class="ln-act-meta">Esquema relacional + NoSQL · Geo-índices</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="ln-phase">
+        <div class="ln-phase-header">
+          <div class="ln-phase-badge progress">Fase 2</div>
+          <div class="ln-phase-title">Desarrollo de la plataforma</div>
+          <div class="ln-phase-status progress">
+            <span class="ln-phase-dot"></span>
+            En curso
+          </div>
+        </div>
+        <ul class="ln-phase-list">
+          <li>
+            <span class="ln-act-num">04</span>
+            <div>
+              <div class="ln-act-title">Implementación de un repositorio de datos estructurado</div>
+              <div class="ln-act-meta">MongoDB · Cosmos DB Azure · Replicación</div>
+            </div>
+          </li>
+          <li>
+            <span class="ln-act-num">05</span>
+            <div>
+              <div class="ln-act-title">Desarrollo del prototipo de plataforma en línea para consulta de datos</div>
+              <div class="ln-act-meta">FastAPI · REST · CORS · Documentación OpenAPI</div>
+            </div>
+          </li>
+          <li>
+            <span class="ln-act-num">06</span>
+            <div>
+              <div class="ln-act-title">Integración y visualización básica de información meteorológica</div>
+              <div class="ln-act-meta">Leaflet · IDW interpolación · Dashboard KPI</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="ln-phase">
+        <div class="ln-phase-header">
+          <div class="ln-phase-badge next">Fase 3</div>
+          <div class="ln-phase-title">Integración futura</div>
+          <div class="ln-phase-status next">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Próximo
+          </div>
+        </div>
+        <ul class="ln-phase-list">
+          <li>
+            <span class="ln-act-num">07</span>
+            <div>
+              <div class="ln-act-title">Diseño del esquema para la futura incorporación de datos de sensores</div>
+              <div class="ln-act-meta">Hardware: DHT22 · BME280 · ESP32 · Raspberry Pi</div>
+            </div>
+          </li>
+          <li>
+            <span class="ln-act-num">08</span>
+            <div>
+              <div class="ln-act-title">Elaboración de documentación técnica y reporte final del proyecto</div>
+              <div class="ln-act-meta">Documentación API · Guías de despliegue · Metodología</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== ACCEDE A LOS DATOS ===== -->
+<section class="ln-section" id="datos">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">07</div>
+      <div>
+        <div class="ln-section-kicker">Accede a los datos</div>
+        <h2 class="ln-h2">Tres formas de explorar la información</h2>
+      </div>
+    </div>
+
+    <div class="ln-cards">
+
+      <a class="ln-card ln-card-primary" href="app.html">
+        <div class="ln-card-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </div>
+        <h3 class="ln-card-title">Visualizador interactivo</h3>
+        <p class="ln-card-text">
+          Heatmap UHI en tiempo real, filtros por zona térmica y tipo de superficie,
+          detalle por sensor y exportación a CSV/Excel.
+        </p>
+        <span class="ln-card-arrow">Abrir visualizador →</span>
+      </a>
+
+      <a class="ln-card" href="#" data-open-api>
+        <div class="ln-card-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <h3 class="ln-card-title">Documentación API</h3>
+        <p class="ln-card-text">
+          API REST pública para enviar mediciones desde sensores y consumir datos
+          procesados. Ejemplos en Python para Raspberry Pi y ESP32.
+        </p>
+        <span class="ln-card-arrow">Abrir documentación →</span>
+      </a>
+
+      <a class="ln-card" href="app.html">
+        <div class="ln-card-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3 class="ln-card-title">Descargas abiertas</h3>
+        <p class="ln-card-text">
+          Datasets completos en CSV y Excel: mediciones puntuales de sensores, grid
+          interpolado del heatmap y estadísticas agregadas.
+        </p>
+        <span class="ln-card-arrow">Descargar datos →</span>
+      </a>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== USO Y APLICACIONES ===== -->
+<section class="ln-section ln-section-soft">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">08</div>
+      <div>
+        <div class="ln-section-kicker">Aplicaciones</div>
+        <h2 class="ln-h2">¿Quién puede usar estos datos?</h2>
+      </div>
+    </div>
+
+    <div class="ln-use-grid">
+      <div class="ln-use">
+        <div class="ln-use-emoji">🏛️</div>
+        <h4 class="ln-use-title">Gobiernos municipales</h4>
+        <p class="ln-use-text">Priorizar zonas para arbolado urbano, intervenciones de mitigación y planes de adaptación climática.</p>
+      </div>
+      <div class="ln-use">
+        <div class="ln-use-emoji">🎓</div>
+        <h4 class="ln-use-title">Investigación académica</h4>
+        <p class="ln-use-text">Datasets georreferenciados para estudios de climatología urbana, salud pública y planeación territorial.</p>
+      </div>
+      <div class="ln-use">
+        <div class="ln-use-emoji">📰</div>
+        <h4 class="ln-use-title">Periodismo de datos</h4>
+        <p class="ln-use-text">Acceso a datos primarios verificables para coberturas de cambio climático y desigualdad urbana.</p>
+      </div>
+      <div class="ln-use">
+        <div class="ln-use-emoji">🌱</div>
+        <h4 class="ln-use-title">Organizaciones ciudadanas</h4>
+        <p class="ln-use-text">Evidencia técnica para campañas de defensa de áreas verdes y derecho a la ciudad.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="ln-cta-final">
+  <div class="ln-container">
+    <div class="ln-cta-inner">
+      <h2 class="ln-cta-title">Explora el mapa<br>de las islas de calor</h2>
+      <p class="ln-cta-text">
+        Datos abiertos en tiempo real para entender el comportamiento térmico de la ciudad.
+      </p>
+      <a class="ln-btn ln-btn-primary ln-btn-lg" href="app.html">
+        Abrir visualizador
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="ln-footer">
+  <div class="ln-container">
+    <div class="ln-footer-grid">
+      <div>
+        <div class="ln-footer-brand">
+          <span class="ln-brand-mark sm">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+          </span>
+          <span class="ln-brand-title">Islas de Calor</span>
+        </div>
+        <p class="ln-footer-text">
+          Plataforma colaborativa de monitoreo de islas de calor en la Península de Yucatán.
+          Datos abiertos, código abierto, metodología pública.
+        </p>
+      </div>
+
+      <div>
+        <div class="ln-footer-heading">Plataforma</div>
+        <a href="app.html">Visualizador</a>
+        <a href="app.html?view=docs">API</a>
+        <a href="#datos">Descargas</a>
+      </div>
+
+      <div>
+        <div class="ln-footer-heading">Proyecto</div>
+        <a href="#proyecto">¿Qué es?</a>
+        <a href="#como">Metodología</a>
+        <a href="#institucion">Equipo</a>
+      </div>
+
+      <div>
+        <div class="ln-footer-heading">Contacto</div>
+        <a href="mailto:contacto@islasdecalor.org">contacto@islasdecalor.org</a>
+        <div class="ln-footer-text-sm">Mérida, Yucatán · México</div>
+      </div>
+    </div>
+
+    <div class="ln-footer-bottom">
+      <span>© 2026 Islas de Calor · UPY</span>
+      <span>Datos bajo licencia CC BY 4.0</span>
+    </div>
+  </div>
+</footer>
+
+<!-- =================================================== -->
+<!-- ===== MODAL · DOCUMENTACIÓN API ===== -->
+<!-- =================================================== -->
+<div class="api-modal" id="api-modal" hidden>
+  <div class="api-modal-backdrop" data-close-api></div>
+
+  <div class="api-modal-card" role="dialog" aria-modal="true">
+
+    <header class="api-modal-header">
+      <div class="api-modal-title-wrap">
+        <div class="api-modal-eyebrow">REST · JSON · v1.0</div>
+        <h2 class="api-modal-title">Documentación API · Islas de Calor</h2>
+      </div>
+
+      <div class="api-modal-tabs" id="api-modal-tabs">
+        <button class="active" data-tab="send">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Enviar datos
+        </button>
+        <button data-tab="get">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Consumir datos
+        </button>
+        <button data-tab="test">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Probar en vivo
+        </button>
+      </div>
+
+      <button class="api-modal-close" data-close-api title="Cerrar (ESC)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <div class="api-modal-body">
+
+      <!-- ========== TAB: ENVIAR DATOS ========== -->
+      <section class="api-tab-content active" data-section="send">
+
+        <div class="api-intro">
+          <h3 class="api-h3">Enviar mediciones a la base de datos</h3>
+          <p class="api-lead">
+            Para agregar información a la base, los dispositivos sensores envían un
+            <b>POST</b> con un JSON al endpoint <code>/api/sensores</code>. Cada llamada
+            inserta una fila nueva en la colección <code>SensoresRaw</code>; el pipeline
+            ETL la procesa automáticamente cada 5 minutos.
+          </p>
+        </div>
+
+        <!-- Endpoint -->
+        <div class="api-endpoint">
+          <div class="api-endpoint-head">
+            <span class="api-method post">POST</span>
+            <code class="api-path">http://127.0.0.1:8000/api/sensores</code>
+          </div>
+          <p class="api-endpoint-desc">
+            Recibe una medición individual desde un dispositivo y la persiste en MongoDB
+            con timestamp UTC asignado por el servidor.
+          </p>
+        </div>
+
+        <h4 class="api-h4">Campos del payload</h4>
+        <table class="api-table">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Unidad</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td><code>device_id</code></td><td>string</td><td>—</td><td>ID único del sensor</td></tr>
+            <tr><td><code>temperatura</code></td><td>number</td><td>°C</td><td>Temperatura ambiente</td></tr>
+            <tr><td><code>humedad</code></td><td>number</td><td>%</td><td>Humedad relativa (0–100)</td></tr>
+            <tr><td><code>salinidad</code></td><td>number</td><td>ratio</td><td>Conductividad del suelo (0–1)</td></tr>
+            <tr><td><code>radiacion</code></td><td>number</td><td>W/m²</td><td>Radiación solar incidente</td></tr>
+            <tr><td><code>lat</code></td><td>number</td><td>°</td><td>Latitud WGS-84</td></tr>
+            <tr><td><code>lon</code></td><td>number</td><td>°</td><td>Longitud WGS-84</td></tr>
+            <tr><td><code>estado</code></td><td>string</td><td>—</td><td>"activo" / "mantenimiento"</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ===== Prueba con curl ===== -->
+        <h4 class="api-h4">1 · Prueba rápida con curl</h4>
+        <p class="api-p">Verifica que la API responde antes de programar el cliente Python:</p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Bash</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/api/sensores \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "sensor-07",
+    "temperatura": 34.8,
+    "humedad": 48.2,
+    "salinidad": 0.612,
+    "radiacion": 820.5,
+    "lat": 20.9742,
+    "lon": -89.6213,
+    "estado": "activo"
+  }'
+
+# Respuesta esperada:
+# {"status": "ok"}</code></pre>
+        </div>
+
+        <!-- ===== Python básico ===== -->
+        <h4 class="api-h4">2 · Envío básico desde Python</h4>
+        <p class="api-p">
+          Caso mínimo. Instala primero la dependencia:
+          <code>pip install requests</code>
+        </p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · enviar.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import requests
+
+API_URL = "http://127.0.0.1:8000/api/sensores"
+
+payload = {
+    "device_id":   "sensor-07",
+    "temperatura": 34.8,
+    "humedad":     48.2,
+    "salinidad":   0.612,
+    "radiacion":   820.5,
+    "lat":         20.9742,
+    "lon":        -89.6213,
+    "estado":      "activo",
+}
+
+response = requests.post(API_URL, json=payload, timeout=10)
+response.raise_for_status()
+print("Insertado en la base:", response.json())  # -> {'status': 'ok'}</code></pre>
+        </div>
+
+        <!-- ===== Python loop ===== -->
+        <h4 class="api-h4">3 · Loop continuo de telemetría</h4>
+        <p class="api-p">
+          Patrón típico en dispositivos IoT que miden y envían cada N segundos.
+          Sustituye <code>leer_sensor()</code> por la lectura real del hardware.
+        </p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · sensor_loop.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import time
+import requests
+
+API_URL    = "http://127.0.0.1:8000/api/sensores"
+DEVICE_ID  = "sensor-07"
+LAT, LON   = 20.9742, -89.6213
+INTERVALO  = 60   # segundos entre envíos
+
+
+def leer_sensor():
+    """Sustituir por la lectura real del hardware (DHT22, BME280, etc.)."""
+    return {
+        "temperatura": 34.8,
+        "humedad":     48.2,
+        "salinidad":   0.61,
+        "radiacion":   820.0,
+    }
+
+
+def enviar(medicion):
+    payload = {
+        "device_id": DEVICE_ID,
+        "lat": LAT, "lon": LON,
+        "estado": "activo",
+        **medicion,
+    }
+    try:
+        r = requests.post(API_URL, json=payload, timeout=10)
+        r.raise_for_status()
+        return True
+    except requests.RequestException as e:
+        print(f"[{time.strftime('%H:%M:%S')}] error: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    while True:
+        med = leer_sensor()
+        ok  = enviar(med)
+        print(f"[{time.strftime('%H:%M:%S')}]  t={med['temperatura']}°C  h={med['humedad']}%  enviado={ok}")
+        time.sleep(INTERVALO)</code></pre>
+        </div>
+
+        <!-- ===== Python resiliente ===== -->
+        <h4 class="api-h4">4 · Resiliente · reintentos + buffer local</h4>
+        <p class="api-p">
+          Para redes inestables (WiFi externo, LTE). Si la API está caída, guarda en disco
+          y reintenta cuando vuelva.
+        </p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · sensor_resiliente.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import json
+import pathlib
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+API_URL = "http://127.0.0.1:8000/api/sensores"
+BUFFER  = pathlib.Path("./pendientes.jsonl")
+
+# Sesión con reintentos automáticos (backoff exponencial)
+session = requests.Session()
+retries = Retry(
+    total=5,
+    backoff_factor=1.5,            # 1.5, 3, 4.5, 6, 7.5 s
+    status_forcelist=[502, 503, 504],
+    allowed_methods=["POST"],
+)
+session.mount("http://",  HTTPAdapter(max_retries=retries))
+session.mount("https://", HTTPAdapter(max_retries=retries))
+
+
+def guardar_buffer(payload):
+    """Persistir si la API no respondió."""
+    with BUFFER.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(payload) + "\n")
+
+
+def vaciar_buffer():
+    """Reintentar pendientes acumulados."""
+    if not BUFFER.exists():
+        return
+    quedan = []
+    for linea in BUFFER.read_text().splitlines():
+        try:
+            session.post(API_URL, json=json.loads(linea), timeout=10).raise_for_status()
+        except requests.RequestException:
+            quedan.append(linea)
+    BUFFER.write_text("\n".join(quedan) + ("\n" if quedan else ""))
+
+
+def enviar(payload):
+    try:
+        session.post(API_URL, json=payload, timeout=10).raise_for_status()
+        vaciar_buffer()
+        print("ok")
+    except requests.RequestException as e:
+        print("API caída, guardando local:", e)
+        guardar_buffer(payload)
+
+
+enviar({
+    "device_id":   "sensor-07",
+    "temperatura": 34.8, "humedad": 48.2,
+    "salinidad":   0.61, "radiacion": 820.0,
+    "lat": 20.9742, "lon": -89.6213,
+    "estado": "activo",
+})</code></pre>
+        </div>
+
+        <!-- ===== Cliente reutilizable ===== -->
+        <h4 class="api-h4">5 · Cliente reutilizable (clase)</h4>
+        <p class="api-p">Una clase que encapsula la sesión HTTP, el device_id y la geolocalización.</p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · islas_client.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">from dataclasses import dataclass, field
+import requests
+
+
+@dataclass
+class IslasClient:
+    base_url:  str = "http://127.0.0.1:8000"
+    device_id: str = "sensor-XX"
+    lat:       float = 0.0
+    lon:       float = 0.0
+    timeout:   float = 10.0
+    _s: requests.Session = field(default_factory=requests.Session)
+
+    def enviar(self, temperatura, humedad, salinidad, radiacion, estado="activo"):
+        payload = {
+            "device_id":   self.device_id,
+            "lat":         self.lat,
+            "lon":         self.lon,
+            "temperatura": temperatura,
+            "humedad":     humedad,
+            "salinidad":   salinidad,
+            "radiacion":   radiacion,
+            "estado":      estado,
+        }
+        r = self._s.post(f"{self.base_url}/api/sensores", json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+
+# ---------- uso ----------
+cli = IslasClient(
+    base_url="http://127.0.0.1:8000",
+    device_id="sensor-07",
+    lat=20.9742, lon=-89.6213,
+)
+cli.enviar(temperatura=34.8, humedad=48.2, salinidad=0.61, radiacion=820.0)</code></pre>
+        </div>
+
+        <!-- ===== Raspberry Pi ===== -->
+        <h4 class="api-h4">6 · Ejemplo real · Raspberry Pi + DHT22</h4>
+        <p class="api-p">Hardware real con sensor de temperatura/humedad conectado al GPIO de la Pi.</p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · rpi_dht22.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python"># pip install adafruit-circuitpython-dht requests
+import time
+import board
+import adafruit_dht
+import requests
+
+API_URL   = "http://127.0.0.1:8000/api/sensores"
+DEVICE_ID = "rpi-merida-01"
+LAT, LON  = 20.9742, -89.6213
+
+dht = adafruit_dht.DHT22(board.D4)
+
+while True:
+    try:
+        t = dht.temperature
+        h = dht.humidity
+        if t is None or h is None:
+            continue
+
+        payload = {
+            "device_id":   DEVICE_ID,
+            "temperatura": round(t, 2),
+            "humedad":     round(h, 2),
+            "salinidad":   0.55,      # sensor capacitivo
+            "radiacion":   750.0,     # piranómetro
+            "lat": LAT, "lon": LON,
+            "estado": "activo",
+        }
+
+        r = requests.post(API_URL, json=payload, timeout=10)
+        print(f"[{time.strftime('%H:%M:%S')}] t={t:.1f}°C h={h:.1f}% → HTTP {r.status_code}")
+
+    except RuntimeError:
+        # DHT22 falla a veces, ignorar y reintentar
+        pass
+
+    time.sleep(60)</code></pre>
+        </div>
+
+        <div class="api-alert">
+          <b>Códigos de respuesta:</b>
+          <span class="api-code-pill ok">200</span> ok ·
+          <span class="api-code-pill warn">422</span> JSON inválido ·
+          <span class="api-code-pill err">500</span> error de base de datos
+        </div>
+
+      </section>
+
+      <!-- ========== TAB: CONSUMIR DATOS ========== -->
+      <section class="api-tab-content" data-section="get" hidden>
+
+        <div class="api-intro">
+          <h3 class="api-h3">Consumir datos desde Python</h3>
+          <p class="api-lead">
+            Tres endpoints <code>GET</code> sin autenticación, devuelven JSON listo para
+            cargar a <code>pandas</code>, <code>numpy</code> o cualquier herramienta de análisis.
+          </p>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="api-endpoint-head">
+            <span class="api-method get">GET</span>
+            <code class="api-path">/api/sensores</code>
+          </div>
+          <p class="api-endpoint-desc">Mediciones procesadas con features derivadas (UHI, zona térmica, índices).</p>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="api-endpoint-head">
+            <span class="api-method get">GET</span>
+            <code class="api-path">/api/grid</code>
+          </div>
+          <p class="api-endpoint-desc">2,500 puntos interpolados (IDW) del heatmap UHI.</p>
+        </div>
+
+        <div class="api-endpoint">
+          <div class="api-endpoint-head">
+            <span class="api-method get">GET</span>
+            <code class="api-path">/api/resumen</code>
+          </div>
+          <p class="api-endpoint-desc">Estadísticas agregadas del último batch.</p>
+        </div>
+
+        <h4 class="api-h4">1 · Lectura básica</h4>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import requests
+
+BASE = "http://127.0.0.1:8000"
+
+sensores = requests.get(f"{BASE}/api/sensores").json()
+grid     = requests.get(f"{BASE}/api/grid").json()
+resumen  = requests.get(f"{BASE}/api/resumen").json()
+
+print(f"Sensores: {len(sensores)}")
+print(f"Grid: {len(grid)} puntos")
+print(f"UHI promedio: {resumen['uhi_promedio']:.2f} °C")</code></pre>
+        </div>
+
+        <h4 class="api-h4">2 · Cargar a Pandas + análisis</h4>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · analisis.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import pandas as pd
+import requests
+
+df = pd.DataFrame(requests.get("http://127.0.0.1:8000/api/sensores").json())
+
+# Promedios por zona térmica
+print(df.groupby("zona_termica")[["temperatura", "uhi"]].mean().round(2))
+
+# Sensores en zona crítica
+criticos = df[df["uhi"] > 5].sort_values("uhi", ascending=False)
+print(criticos[["lat", "lon", "temperatura", "uhi"]])
+
+# Exportar a Excel
+df.to_excel("sensores.xlsx", index=False)</code></pre>
+        </div>
+
+        <h4 class="api-h4">3 · Visualizar heatmap localmente</h4>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · plot.py</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+import requests
+
+grid = requests.get("http://127.0.0.1:8000/api/grid").json()
+n = int(np.sqrt(len(grid)))
+
+LATS = np.array([p["lat"] for p in grid]).reshape(n, n)
+LONS = np.array([p["lon"] for p in grid]).reshape(n, n)
+UHIS = np.array([p["uhi"] for p in grid]).reshape(n, n)
+
+plt.figure(figsize=(10, 8))
+plt.pcolormesh(LONS, LATS, UHIS, cmap="RdYlBu_r", shading="auto")
+plt.colorbar(label="UHI (°C)")
+plt.title("Islas de calor · Mérida, Yucatán")
+plt.savefig("merida_uhi.png", dpi=200)
+plt.show()</code></pre>
+        </div>
+
+      </section>
+
+      <!-- ========== TAB: PROBAR EN VIVO ========== -->
+      <section class="api-tab-content" data-section="test" hidden>
+
+        <div class="api-intro">
+          <h3 class="api-h3">Playground · Probar el POST en vivo</h3>
+          <p class="api-lead">
+            Completa los campos y envía una medición real a la base de datos desde el
+            navegador. Útil para validar conectividad antes de programar el cliente Python.
+          </p>
+        </div>
+
+        <form class="api-playground" id="api-playground">
+          <div class="api-form-grid">
+            <label>
+              <span>device_id</span>
+              <input type="text" name="device_id" value="sensor-test-01" required>
+            </label>
+            <label>
+              <span>estado</span>
+              <select name="estado">
+                <option value="activo">activo</option>
+                <option value="mantenimiento">mantenimiento</option>
+              </select>
+            </label>
+            <label>
+              <span>temperatura · °C</span>
+              <input type="number" step="0.1" name="temperatura" value="34.5" required>
+            </label>
+            <label>
+              <span>humedad · %</span>
+              <input type="number" step="0.1" name="humedad" value="48.0" required>
+            </label>
+            <label>
+              <span>salinidad · 0–1</span>
+              <input type="number" step="0.001" name="salinidad" value="0.61" required>
+            </label>
+            <label>
+              <span>radiacion · W/m²</span>
+              <input type="number" step="1" name="radiacion" value="820" required>
+            </label>
+            <label>
+              <span>lat</span>
+              <input type="number" step="0.0001" name="lat" value="20.9742" required>
+            </label>
+            <label>
+              <span>lon</span>
+              <input type="number" step="0.0001" name="lon" value="-89.6213" required>
+            </label>
+          </div>
+
+          <div class="api-playground-actions">
+            <button type="submit" class="ln-btn ln-btn-primary">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Enviar POST /api/sensores
+            </button>
+            <button type="button" class="ln-btn ln-btn-ghost" id="api-randomize">🎲 Aleatorizar valores</button>
+          </div>
+
+          <div class="api-response" id="api-response" hidden>
+            <div class="api-response-head">
+              <span class="api-response-status" id="api-response-status">—</span>
+              <span class="api-response-time" id="api-response-time">—</span>
+            </div>
+            <pre><code class="language-json" id="api-response-body"></code></pre>
+          </div>
+        </form>
+
+      </section>
+
+    </div>
+
+    <footer class="api-modal-footer">
+      <div class="api-modal-footer-text">
+        ¿Necesitas la versión extendida con más ejemplos y referencia completa?
+      </div>
+      <a class="ln-btn ln-btn-ghost" href="app.html?view=docs" target="_blank">
+        Abrir docs completa
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </footer>
+
   </div>
 </div>
 
-<div class="container">
 
-  <div id="map"></div>
+<script>
+/* ===== Stats en vivo del API ===== */
+let _sensorsCache = [];
+let _gridCache    = [];
+let _resumenCache = {};
 
-  <div class="panel">
+async function loadStats() {
+  const pill = document.getElementById('ln-status');
+  const txt  = document.getElementById('ln-status-text');
+  try {
+    const r = await fetch('http://127.0.0.1:8000/api/resumen').then(r => r.json());
+    const s = await fetch('http://127.0.0.1:8000/api/sensores').then(r => r.json());
+    const g = await fetch('http://127.0.0.1:8000/api/grid').then(r => r.json());
 
-    <div class="title">PARÁMETROS</div>
+    _resumenCache = r || {};
+    _sensorsCache = Array.isArray(s) ? s : [];
+    _gridCache    = Array.isArray(g) ? g : [];
 
-    <select id="selector"></select>
+    document.getElementById('stat-sensors').textContent = (r?.num_sensores ?? _sensorsCache.length) || '—';
+    document.getElementById('stat-grid').textContent    = _gridCache.length.toLocaleString('es-MX');
+    document.getElementById('stat-uhi').innerHTML       =
+      (r?.uhi_max ? r.uhi_max.toFixed(1) : '—') + '<span class="ln-stat-unit">°C</span>';
 
-    <div id="panel-content"></div>
+    document.getElementById('readout-uhi').textContent     = (r?.uhi_max ? r.uhi_max.toFixed(1) : '—') + '°C';
+    document.getElementById('readout-sensors').textContent = _sensorsCache.length || '—';
 
-  </div>
+    const tSens = document.getElementById('hero-trust-sensors');
+    const tGrid = document.getElementById('hero-trust-grid');
+    if (tSens) tSens.textContent = _sensorsCache.length || '—';
+    if (tGrid) tGrid.textContent = _gridCache.length ? _gridCache.length.toLocaleString('es-MX') : '—';
 
-</div>
+    pill.classList.add('online');
+    txt.textContent = 'API en línea';
 
-<script src="script.js"></script>
+    paintHeroMap();
+  } catch {
+    pill.classList.add('offline');
+    txt.textContent = 'API offline';
+  }
+}
+
+/* ===== Hero map (Leaflet) ===== */
+const ZONA_COLOR = { alta: '#dc2626', media: '#f97316', baja: '#10b981' };
+let heroMap = null;
+let heroHeat = null;
+let heroMarkers = [];
+
+/* 5 clusters distribuidos por Mérida (centro, norte, sur, este, oeste) */
+const HERO_CLUSTERS = [
+  { name: 'Centro Histórico', center: [20.967, -89.620], intensity: 1.00, radius: 0.012 },
+  { name: 'Norte',            center: [21.020, -89.625], intensity: 0.92, radius: 0.014 },
+  { name: 'Sur',              center: [20.925, -89.620], intensity: 0.78, radius: 0.013 },
+  { name: 'Este',             center: [20.985, -89.560], intensity: 0.70, radius: 0.014 },
+  { name: 'Oeste',            center: [20.975, -89.685], intensity: 0.65, radius: 0.012 },
+];
+
+function generateClusterPoints() {
+  const pts = [];
+  HERO_CLUSTERS.forEach(c => {
+    for (let i = 0; i < 60; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.pow(Math.random(), 0.6) * c.radius;     // distribución sesgada al centro
+      const lat = c.center[0] + Math.cos(angle) * r * (0.85 + Math.random() * 0.3);
+      const lon = c.center[1] + Math.sin(angle) * r;
+      const falloff = 1 - (r / c.radius);                    // intensidad cae con la distancia
+      const intensity = c.intensity * falloff * (0.7 + Math.random() * 0.3);
+      pts.push([lat, lon, intensity]);
+    }
+  });
+  return pts;
+}
+
+function generateClusterSensors() {
+  /* Marcadores pulsantes en el centro de cada cluster + algunos satélites */
+  const sensors = [];
+  HERO_CLUSTERS.forEach(c => {
+    sensors.push({ lat: c.center[0], lon: c.center[1], zona: c.intensity > 0.85 ? 'alta' : c.intensity > 0.7 ? 'media' : 'baja' });
+    const extras = Math.floor(2 + Math.random() * 2);
+    for (let i = 0; i < extras; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = (0.3 + Math.random() * 0.5) * c.radius;
+      sensors.push({
+        lat: c.center[0] + Math.cos(angle) * r,
+        lon: c.center[1] + Math.sin(angle) * r,
+        zona: c.intensity > 0.85 ? 'alta' : c.intensity > 0.6 ? 'media' : 'baja',
+      });
+    }
+  });
+  return sensors;
+}
+
+function initHeroMap() {
+  if (heroMap) return;
+
+  /* Centro ligeramente desplazado a la derecha (la tarjeta está a la izquierda) */
+  heroMap = L.map('hero-map', {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    touchZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    zoomSnap: 0.25,
+  }).setView([20.975, -89.590], 12.3);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(heroMap);
+
+  /* Pintar clusters siempre (independiente del API) */
+  paintHeroClusters();
+
+  /* Etiquetas flotantes con el nombre de cada zona */
+  HERO_CLUSTERS.forEach(c => {
+    const label = L.marker(c.center, {
+      icon: L.divIcon({
+        className: 'hero-cluster-label',
+        html: `<span class="hero-cluster-name">${c.name}</span>`,
+        iconSize: null,
+        iconAnchor: [0, -14],
+      }),
+      interactive: false,
+    }).addTo(heroMap);
+    heroMarkers.push(label);
+  });
+
+  /* Cinemática suave */
+  let alt = false;
+  setInterval(() => {
+    alt = !alt;
+    heroMap.flyTo([20.975, -89.590], alt ? 12.5 : 12.1, { duration: 10, easeLinearity: 0.6 });
+  }, 11000);
+}
+
+function paintHeroClusters() {
+  if (heroHeat) { heroMap.removeLayer(heroHeat); heroHeat = null; }
+
+  const pts = generateClusterPoints();
+  heroHeat = L.heatLayer(pts, {
+    radius: 38,
+    blur: 32,
+    maxZoom: 17,
+    minOpacity: 0.45,
+    gradient: {
+      0.0: 'rgba(14,165,233,0)',
+      0.2: '#06b6d4',
+      0.4: '#fbbf24',
+      0.7: '#f97316',
+      1.0: '#dc2626',
+    },
+  }).addTo(heroMap);
+
+  /* Sensores con pulso */
+  const sensors = generateClusterSensors();
+  sensors.forEach(s => {
+    const color = ZONA_COLOR[s.zona] || '#fbbf24';
+    const icon = L.divIcon({
+      className: 'hero-sensor',
+      html: `<span class="hero-sensor-dot" style="--c:${color}"></span><span class="hero-sensor-ring" style="--c:${color}"></span>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    const m = L.marker([s.lat, s.lon], { icon, interactive: false }).addTo(heroMap);
+    heroMarkers.push(m);
+  });
+}
+
+function paintHeroMap() {
+  /* Esta función ahora solo actualiza los readouts numéricos.
+     Los clusters visuales se pintan una vez al cargar el mapa. */
+  if (!heroMap) initHeroMap();
+}
+
+initHeroMap();
+loadStats();
+
+/* ===== Nav scrolled state ===== */
+const nav = document.getElementById('ln-nav');
+const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 20);
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+/* ===== Smooth scroll para anchors ===== */
+document.querySelectorAll('a[href^="#"]:not([data-open-api])').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
+
+/* =====================================================
+   MODAL · DOCUMENTACIÓN API
+   ===================================================== */
+const apiModal = document.getElementById('api-modal');
+
+function openApiModal() {
+  apiModal.hidden = false;
+  requestAnimationFrame(() => apiModal.classList.add('open'));
+  document.body.style.overflow = 'hidden';
+  if (window.hljs) window.hljs.highlightAll();
+}
+
+function closeApiModal() {
+  apiModal.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { apiModal.hidden = true; }, 220);
+}
+
+document.querySelectorAll('[data-open-api]').forEach(el => {
+  el.addEventListener('click', e => { e.preventDefault(); openApiModal(); });
+});
+
+document.querySelectorAll('[data-close-api]').forEach(el => {
+  el.addEventListener('click', e => { e.preventDefault(); closeApiModal(); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !apiModal.hidden) closeApiModal();
+});
+
+/* ===== Tabs del modal ===== */
+const tabsContainer = document.getElementById('api-modal-tabs');
+tabsContainer.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  tabsContainer.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.api-tab-content').forEach(s => {
+    const match = s.dataset.section === tab;
+    s.hidden = !match;
+    s.classList.toggle('active', match);
+  });
+  // Scroll arriba del body al cambiar tab
+  document.querySelector('.api-modal-body')?.scrollTo({ top: 0, behavior: 'smooth' });
+  if (window.hljs) window.hljs.highlightAll();
+});
+
+/* ===== Copy buttons ===== */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.api-code-copy');
+  if (!btn) return;
+  const code = btn.closest('.api-code')?.querySelector('code')?.innerText;
+  if (!code) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1600);
+  } catch {}
+});
+
+/* ===== Playground · POST en vivo ===== */
+const pgForm   = document.getElementById('api-playground');
+const pgResp   = document.getElementById('api-response');
+const pgStatus = document.getElementById('api-response-status');
+const pgTime   = document.getElementById('api-response-time');
+const pgBody   = document.getElementById('api-response-body');
+
+pgForm?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(pgForm);
+  const payload = {};
+  for (const [k, v] of fd.entries()) {
+    payload[k] = (k === 'device_id' || k === 'estado') ? v : Number(v);
+  }
+
+  pgResp.hidden = false;
+  pgStatus.className = 'api-response-status loading';
+  pgStatus.textContent = 'Enviando…';
+  pgBody.textContent = '';
+
+  const t0 = performance.now();
+  try {
+    const r = await fetch('http://127.0.0.1:8000/api/sensores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const t1 = performance.now();
+    const json = await r.json();
+
+    pgStatus.className = 'api-response-status ' + (r.ok ? 'ok' : 'err');
+    pgStatus.textContent = `HTTP ${r.status} ${r.statusText}`;
+    pgTime.textContent = `${(t1 - t0).toFixed(0)} ms`;
+    pgBody.textContent = JSON.stringify(json, null, 2);
+    if (window.hljs) window.hljs.highlightElement(pgBody);
+  } catch (err) {
+    const t1 = performance.now();
+    pgStatus.className = 'api-response-status err';
+    pgStatus.textContent = 'Network error';
+    pgTime.textContent = `${(t1 - t0).toFixed(0)} ms`;
+    pgBody.textContent = String(err);
+  }
+});
+
+document.getElementById('api-randomize')?.addEventListener('click', () => {
+  const rand = (a, b, dec = 1) => Number((Math.random() * (b - a) + a).toFixed(dec));
+  pgForm.temperatura.value = rand(27, 38);
+  pgForm.humedad.value     = rand(35, 85);
+  pgForm.salinidad.value   = rand(0.1, 1.0, 3);
+  pgForm.radiacion.value   = rand(300, 950, 0);
+  pgForm.lat.value         = rand(20.95, 20.99, 4);
+  pgForm.lon.value         = rand(-89.65, -89.60, 4);
+});
+</script>
 
 </body>
 </html>
