@@ -44,6 +44,7 @@
       <a href="#proyecto">Proyecto</a>
       <a href="#como">Arquitectura</a>
       <a href="#universidades">Universidades</a>
+      <a href="#equipo">Equipo</a>
       <a href="#roadmap">Hoja de ruta</a>
       <a href="#" data-open-api>API</a>
     </nav>
@@ -643,12 +644,164 @@
   </div>
 </section>
 
+<!-- ===== EQUIPO DE INVESTIGACIÓN ===== -->
+<section class="ln-section ln-team-section" id="equipo">
+  <div class="ln-container">
+
+    <div class="ln-section-header">
+      <div class="ln-section-num">06</div>
+      <div>
+        <div class="ln-section-kicker">Equipo de investigación</div>
+        <h2 class="ln-h2">Las personas detrás<br>de la plataforma</h2>
+      </div>
+    </div>
+
+    <p class="ln-fuentes-lead">
+      Un equipo interdisciplinario que combina <b>investigación científica</b>,
+      <b>ingeniería de datos</b> y <b>diseño de software</b> para construir
+      infraestructura pública de monitoreo climático en la Península de Yucatán.
+    </p>
+
+    <div class="ln-team-grid">
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/coordinador.jpg" alt="Coordinador del proyecto" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="DR">DR</div>
+          <span class="ln-team-affil upy">UPY</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Coordinación del proyecto</div>
+          <h3 class="ln-team-name">Dr. [Nombre Apellido]</h3>
+          <p class="ln-team-bio">
+            Profesor-investigador en climatología urbana. Lidera la dirección
+            científica, el diseño metodológico y la validación de los modelos
+            térmicos aplicados al estudio de UHI en Mérida.
+          </p>
+          <div class="ln-team-tags">
+            <span>Climatología</span><span>Metodología</span><span>UHI</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/investigador.jpg" alt="Investigadora senior" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="MC">MC</div>
+          <span class="ln-team-affil upy">UPY</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Investigación científica</div>
+          <h3 class="ln-team-name">Mtra. [Nombre Apellido]</h3>
+          <p class="ln-team-bio">
+            Especialista en análisis espacial y sistemas de información geográfica.
+            Responsable de la integración de fuentes públicas (SMN, INEGI, CHR) y
+            de la interpolación IDW del mapa de calor.
+          </p>
+          <div class="ln-team-tags">
+            <span>SIG</span><span>Análisis espacial</span><span>IDW</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/didier.jpg" alt="Didier Moreno" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="DM">DM</div>
+          <span class="ln-team-affil tec">Tec Software</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Backend &amp; pipeline de datos</div>
+          <h3 class="ln-team-name">Didier Moreno</h3>
+          <p class="ln-team-bio">
+            Desarrollo del backend FastAPI, orquestación del pipeline ETL y
+            modelado de las colecciones MongoDB. Implementa el cálculo de
+            features y la exposición de la API REST pública.
+          </p>
+          <div class="ln-team-tags">
+            <span>Python</span><span>FastAPI</span><span>MongoDB</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/ramiro.jpg" alt="Ramiro Chay" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="RC">RC</div>
+          <span class="ln-team-affil tec">Tec Software</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Frontend &amp; visualización</div>
+          <h3 class="ln-team-name">Ramiro Chay</h3>
+          <p class="ln-team-bio">
+            Diseño e implementación del visualizador interactivo con Leaflet,
+            el dashboard de KPIs y la landing pública. Responsable de la
+            experiencia de usuario y la consistencia visual del producto.
+          </p>
+          <div class="ln-team-tags">
+            <span>JavaScript</span><span>Leaflet</span><span>UI/UX</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/hardware.jpg" alt="Líder de hardware" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="IH">IH</div>
+          <span class="ln-team-affil upy">UPY</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Instrumentación &amp; sensores IoT</div>
+          <h3 class="ln-team-name">Ing. [Nombre Apellido]</h3>
+          <p class="ln-team-bio">
+            Diseño, calibración y despliegue de los dispositivos de medición
+            (ESP32, BME280, DHT22). Define el protocolo de telemetría que
+            alimenta la colección <code>SensoresRaw</code>.
+          </p>
+          <div class="ln-team-tags">
+            <span>ESP32</span><span>IoT</span><span>Calibración</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="ln-team-card">
+        <div class="ln-team-photo-wrap">
+          <img src="assets/team/asesor.jpg" alt="Asesor académico" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="AS">AS</div>
+          <span class="ln-team-affil tec">Tec Software</span>
+        </div>
+        <div class="ln-team-body">
+          <div class="ln-team-role">Asesoría técnica</div>
+          <h3 class="ln-team-name">Mtro. [Nombre Apellido]</h3>
+          <p class="ln-team-bio">
+            Acompañamiento académico desde el Tecnológico de Software:
+            arquitectura de sistemas, buenas prácticas de ingeniería y
+            estrategia de datos abiertos para el proyecto.
+          </p>
+          <div class="ln-team-tags">
+            <span>Arquitectura</span><span>Datos abiertos</span><span>DevOps</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="ln-team-note">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>
+        Equipo en proceso de consolidación. Los nombres oficiales serán publicados al cierre de la Fase 2 del proyecto.
+      </span>
+    </div>
+
+  </div>
+</section>
+
 <!-- ===== HOJA DE RUTA ===== -->
 <section class="ln-section ln-section-soft" id="roadmap">
   <div class="ln-container">
 
     <div class="ln-section-header">
-      <div class="ln-section-num">06</div>
+      <div class="ln-section-num">07</div>
       <div>
         <div class="ln-section-kicker">Hoja de ruta</div>
         <h2 class="ln-h2">Actividades del proyecto en tres fases</h2>
@@ -768,7 +921,7 @@
   <div class="ln-container">
 
     <div class="ln-section-header">
-      <div class="ln-section-num">07</div>
+      <div class="ln-section-num">08</div>
       <div>
         <div class="ln-section-kicker">Accede a los datos</div>
         <h2 class="ln-h2">Tres formas de explorar la información</h2>
@@ -823,7 +976,7 @@
   <div class="ln-container">
 
     <div class="ln-section-header">
-      <div class="ln-section-num">08</div>
+      <div class="ln-section-num">09</div>
       <div>
         <div class="ln-section-kicker">Aplicaciones</div>
         <h2 class="ln-h2">¿Quién puede usar estos datos?</h2>
@@ -900,7 +1053,7 @@
         <div class="ln-footer-heading">Proyecto</div>
         <a href="#proyecto">¿Qué es?</a>
         <a href="#como">Metodología</a>
-        <a href="#institucion">Equipo</a>
+        <a href="#equipo">Equipo</a>
       </div>
 
       <div>
@@ -966,6 +1119,21 @@
           </p>
         </div>
 
+        <!-- Aviso de autenticación -->
+        <div class="api-auth-note">
+          <div class="api-auth-note-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <div class="api-auth-note-title">Requiere autenticación HTTP Basic</div>
+            <div class="api-auth-note-text">
+              Todas las llamadas a <code>/api/*</code> requieren credenciales.
+              Usuario: <code>publico</code> · Password: <code>islas2026</code>
+              (configurables vía <code>API_USER</code> / <code>API_PASS</code> en el <code>.env</code> del servidor).
+            </div>
+          </div>
+        </div>
+
         <!-- Endpoint -->
         <div class="api-endpoint">
           <div class="api-endpoint-head">
@@ -974,7 +1142,7 @@
           </div>
           <p class="api-endpoint-desc">
             Recibe una medición individual desde un dispositivo y la persiste en MongoDB
-            con timestamp UTC asignado por el servidor.
+            con timestamp UTC asignado por el servidor. <b>Requiere autenticación.</b>
           </p>
         </div>
 
@@ -1002,6 +1170,7 @@
             <button class="api-code-copy">Copiar</button>
           </div>
 <pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/api/sensores \
+  -u publico:islas2026 \
   -H "Content-Type: application/json" \
   -d '{
     "device_id": "sensor-07",
@@ -1031,7 +1200,8 @@
           </div>
 <pre><code class="language-python">import requests
 
-API_URL = "http://127.0.0.1:8000/api/sensores"
+API_URL  = "http://127.0.0.1:8000/api/sensores"
+API_AUTH = ("publico", "islas2026")        # (API_USER, API_PASS) del .env
 
 payload = {
     "device_id":   "sensor-07",
@@ -1044,7 +1214,7 @@ payload = {
     "estado":      "activo",
 }
 
-response = requests.post(API_URL, json=payload, timeout=10)
+response = requests.post(API_URL, json=payload, auth=API_AUTH, timeout=10)
 response.raise_for_status()
 print("Insertado en la base:", response.json())  # -> {'status': 'ok'}</code></pre>
         </div>
@@ -1064,6 +1234,7 @@ print("Insertado en la base:", response.json())  # -> {'status': 'ok'}</code></p
 import requests
 
 API_URL    = "http://127.0.0.1:8000/api/sensores"
+API_AUTH   = ("publico", "islas2026")
 DEVICE_ID  = "sensor-07"
 LAT, LON   = 20.9742, -89.6213
 INTERVALO  = 60   # segundos entre envíos
@@ -1087,7 +1258,7 @@ def enviar(medicion):
         **medicion,
     }
     try:
-        r = requests.post(API_URL, json=payload, timeout=10)
+        r = requests.post(API_URL, json=payload, auth=API_AUTH, timeout=10)
         r.raise_for_status()
         return True
     except requests.RequestException as e:
@@ -1120,11 +1291,13 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-API_URL = "http://127.0.0.1:8000/api/sensores"
-BUFFER  = pathlib.Path("./pendientes.jsonl")
+API_URL  = "http://127.0.0.1:8000/api/sensores"
+API_AUTH = ("publico", "islas2026")
+BUFFER   = pathlib.Path("./pendientes.jsonl")
 
 # Sesión con reintentos automáticos (backoff exponencial)
 session = requests.Session()
+session.auth = API_AUTH
 retries = Retry(
     total=5,
     backoff_factor=1.5,            # 1.5, 3, 4.5, 6, 7.5 s
@@ -1185,6 +1358,12 @@ enviar({
 import requests
 
 
+def _new_session(user="publico", password="islas2026"):
+    s = requests.Session()
+    s.auth = (user, password)
+    return s
+
+
 @dataclass
 class IslasClient:
     base_url:  str = "http://127.0.0.1:8000"
@@ -1192,7 +1371,12 @@ class IslasClient:
     lat:       float = 0.0
     lon:       float = 0.0
     timeout:   float = 10.0
-    _s: requests.Session = field(default_factory=requests.Session)
+    user:      str = "publico"
+    password:  str = "islas2026"
+    _s: requests.Session = field(default_factory=_new_session)
+
+    def __post_init__(self):
+        self._s.auth = (self.user, self.password)
 
     def enviar(self, temperatura, humedad, salinidad, radiacion, estado="activo"):
         payload = {
@@ -1234,6 +1418,7 @@ import adafruit_dht
 import requests
 
 API_URL   = "http://127.0.0.1:8000/api/sensores"
+API_AUTH  = ("publico", "islas2026")
 DEVICE_ID = "rpi-merida-01"
 LAT, LON  = 20.9742, -89.6213
 
@@ -1256,7 +1441,7 @@ while True:
             "estado": "activo",
         }
 
-        r = requests.post(API_URL, json=payload, timeout=10)
+        r = requests.post(API_URL, json=payload, auth=API_AUTH, timeout=10)
         print(f"[{time.strftime('%H:%M:%S')}] t={t:.1f}°C h={h:.1f}% → HTTP {r.status_code}")
 
     except RuntimeError:
@@ -1269,8 +1454,161 @@ while True:
         <div class="api-alert">
           <b>Códigos de respuesta:</b>
           <span class="api-code-pill ok">200</span> ok ·
+          <span class="api-code-pill warn">401</span> credenciales inválidas ·
           <span class="api-code-pill warn">422</span> JSON inválido ·
           <span class="api-code-pill err">500</span> error de base de datos
+        </div>
+
+        <!-- ============================================== -->
+        <!-- ===== Ingesta directa a Cosmos DB (sin API) === -->
+        <!-- ============================================== -->
+        <div class="api-divider">
+          <span>Alternativa avanzada</span>
+        </div>
+
+        <div class="api-intro">
+          <h3 class="api-h3">7 · Ingesta directa a Cosmos DB (sin pasar por la API)</h3>
+          <p class="api-lead">
+            Para cargas masivas, pruebas desde notebooks o procesos batch, también puedes
+            insertar directamente en la colección <code>SensoresRaw</code> de
+            <b>Cosmos DB (API for MongoDB)</b> usando <code>pymongo</code>. No requiere autenticación
+            HTTP — usa las credenciales del propio cluster. Este patrón es ideal para
+            <b>Google Colab</b>, scripts de simulación y migraciones.
+          </p>
+        </div>
+
+        <div class="api-auth-note" style="border-color: rgba(220,38,38,.35); background: rgba(254, 226, 226, .35);">
+          <div class="api-auth-note-icon" style="background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="api-auth-note-title">Acceso privilegiado · solo para administradores</div>
+            <div class="api-auth-note-text">
+              Este flujo <b>salta la API REST</b> y escribe directamente en la base. Úsalo solo
+              para cargas iniciales, pruebas o migraciones. La cadena <code>MONGO_URI</code>
+              contiene credenciales de administrador — no la subas a repos públicos ni la pegues
+              en notebooks compartidos.
+            </div>
+          </div>
+        </div>
+
+        <!-- Endpoint visual -->
+        <div class="api-endpoint">
+          <div class="api-endpoint-head">
+            <span class="api-method post" style="background: linear-gradient(135deg, #166534 0%, #14532d 100%);">MONGO</span>
+            <code class="api-path">mongodb+srv://&lt;cluster&gt;.cosmos.azure.com / islas_calor.SensoresRaw</code>
+          </div>
+          <p class="api-endpoint-desc">
+            Inserta documentos con la misma estructura que el POST de la API, pero usando
+            el driver de Mongo. El pipeline ETL los procesará en el siguiente ciclo (cada 5 min).
+          </p>
+        </div>
+
+        <h4 class="api-h4">Estructura esperada del documento</h4>
+        <p class="api-p">Idéntica a la del payload del POST, agregando un <code>timestamp</code> UTC:</p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">JSON · documento Mongo</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-json">{
+  "device_id":   "sensor-colab-01",
+  "temperatura": 34.2,
+  "humedad":     58.0,
+  "salinidad":   0.42,
+  "radiacion":   712.5,
+  "lat":         20.9674,
+  "lon":        -89.5926,
+  "estado":      "activo",
+  "timestamp":   ISODate("2026-05-26T18:42:11Z")
+}</code></pre>
+        </div>
+
+        <!-- ===== Colab notebook ===== -->
+        <h4 class="api-h4">Notebook completo · Google Colab</h4>
+        <p class="api-p">
+          Conecta, verifica la colección, inserta una lectura individual, un batch simulado de
+          Mérida y consulta los últimos documentos. Listo para pegar en una celda de Colab.
+        </p>
+        <div class="api-code">
+          <div class="api-code-head">
+            <span class="api-code-lang">Python · ingesta_cosmos.ipynb</span>
+            <button class="api-code-copy">Copiar</button>
+          </div>
+<pre><code class="language-python"># ====================================================
+# Islas de Calor · Ingesta a Cosmos DB desde Colab
+# ====================================================
+!pip install -q "pymongo[srv]" pandas
+
+from datetime import datetime, timedelta
+from pymongo import MongoClient
+import pandas as pd
+import random, warnings, urllib.parse
+
+warnings.filterwarnings("ignore")
+
+# 1) Credenciales — en producción usa getpass o variables de entorno
+MONGO_URI = (
+    "mongodb+srv://administrador:&lt;PASSWORD&gt;"
+    "@investigacion202605.global.mongocluster.cosmos.azure.com/"
+    "?tls=true&amp;authMechanism=SCRAM-SHA-256&amp;retrywrites=false&amp;maxIdleTimeMS=120000"
+)
+MONGO_DB   = "islas_calor"
+COLLECTION = "SensoresRaw"
+
+# 2) Conectar y verificar
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=15000)
+db  = client[MONGO_DB]
+col = db[COLLECTION]
+print("✓ Conectado a", MONGO_DB)
+print("  Colecciones:", db.list_collection_names())
+print("  Docs actuales en", COLLECTION, ":", col.estimated_document_count())
+
+# 3) Enviar UNA lectura
+una = {
+    "device_id":   "sensor-colab-01",
+    "temperatura": 34.2,
+    "humedad":     58.0,
+    "salinidad":   0.42,
+    "radiacion":   712.5,
+    "lat":         20.9674,
+    "lon":        -89.5926,
+    "estado":      "activo",
+    "timestamp":   datetime.utcnow(),
+}
+res = col.insert_one(una)
+print("\n✓ 1 lectura insertada · _id:", res.inserted_id)
+
+# 4) Enviar BATCH de N lecturas simuladas en Mérida
+N     = 20
+ahora = datetime.utcnow()
+batch = [{
+    "device_id":   f"sensor-colab-{i:02d}",
+    "temperatura": round(random.uniform(28.0, 38.0), 2),
+    "humedad":     round(random.uniform(40.0, 75.0), 2),
+    "salinidad":   round(random.uniform(0.1, 1.0), 3),
+    "radiacion":   round(random.uniform(400, 950), 1),
+    "lat":         round(20.94 + random.random() * 0.08, 6),
+    "lon":         round(-89.66 + random.random() * 0.08, 6),
+    "estado":      "activo",
+    "timestamp":   ahora - timedelta(minutes=i),
+} for i in range(N)]
+
+res = col.insert_many(batch)
+print(f"✓ {len(res.inserted_ids)} lecturas en batch insertadas")
+
+# 5) Verificar últimos registros
+ultimos = list(col.find().sort("timestamp", -1).limit(10))
+df = pd.DataFrame(ultimos).drop(columns=["_id"])
+print("\nÚltimos 10 documentos:")
+df</code></pre>
+        </div>
+
+        <!-- Notas finales -->
+        <div class="api-alert" style="background: rgba(13,148,136,.06); border-color: rgba(13,148,136,.25);">
+          <b>Después de insertar:</b> el scheduler del API procesará la nueva data en el
+          siguiente ciclo del pipeline (máximo 5 min) — verás los KPIs actualizados en
+          <code>/api/resumen</code> y los puntos nuevos en el mapa de calor del dashboard.
         </div>
 
       </section>
@@ -1281,9 +1619,23 @@ while True:
         <div class="api-intro">
           <h3 class="api-h3">Consumir datos desde Python</h3>
           <p class="api-lead">
-            Tres endpoints <code>GET</code> sin autenticación, devuelven JSON listo para
+            Tres endpoints <code>GET</code> autenticados, devuelven JSON listo para
             cargar a <code>pandas</code>, <code>numpy</code> o cualquier herramienta de análisis.
           </p>
+        </div>
+
+        <div class="api-auth-note">
+          <div class="api-auth-note-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <div class="api-auth-note-title">Requiere autenticación HTTP Basic</div>
+            <div class="api-auth-note-text">
+              Usuario: <code>publico</code> · Password: <code>islas2026</code>
+              (configurables vía <code>API_USER</code> / <code>API_PASS</code> en el <code>.env</code>).
+              Pasa <code>auth=(USER, PASS)</code> a <code>requests</code> o <code>-u USER:PASS</code> a <code>curl</code>.
+            </div>
+          </div>
         </div>
 
         <div class="api-endpoint">
@@ -1319,10 +1671,11 @@ while True:
 <pre><code class="language-python">import requests
 
 BASE = "http://127.0.0.1:8000"
+AUTH = ("publico", "islas2026")     # (API_USER, API_PASS) del .env
 
-sensores = requests.get(f"{BASE}/api/sensores").json()
-grid     = requests.get(f"{BASE}/api/grid").json()
-resumen  = requests.get(f"{BASE}/api/resumen").json()
+sensores = requests.get(f"{BASE}/api/sensores", auth=AUTH).json()
+grid     = requests.get(f"{BASE}/api/grid",     auth=AUTH).json()
+resumen  = requests.get(f"{BASE}/api/resumen",  auth=AUTH).json()
 
 print(f"Sensores: {len(sensores)}")
 print(f"Grid: {len(grid)} puntos")
@@ -1338,7 +1691,9 @@ print(f"UHI promedio: {resumen['uhi_promedio']:.2f} °C")</code></pre>
 <pre><code class="language-python">import pandas as pd
 import requests
 
-df = pd.DataFrame(requests.get("http://127.0.0.1:8000/api/sensores").json())
+AUTH = ("publico", "islas2026")
+
+df = pd.DataFrame(requests.get("http://127.0.0.1:8000/api/sensores", auth=AUTH).json())
 
 # Promedios por zona térmica
 print(df.groupby("zona_termica")[["temperatura", "uhi"]].mean().round(2))
@@ -1361,7 +1716,8 @@ df.to_excel("sensores.xlsx", index=False)</code></pre>
 import matplotlib.pyplot as plt
 import requests
 
-grid = requests.get("http://127.0.0.1:8000/api/grid").json()
+AUTH = ("publico", "islas2026")
+grid = requests.get("http://127.0.0.1:8000/api/grid", auth=AUTH).json()
 n = int(np.sqrt(len(grid)))
 
 LATS = np.array([p["lat"] for p in grid]).reshape(n, n)
@@ -1465,6 +1821,17 @@ plt.show()</code></pre>
 
 <script>
 /* ===== Stats en vivo del API ===== */
+const API_BASE = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
+  ? "http://127.0.0.1:8000"
+  : "";  // mismo origen en producción
+
+// Credenciales del dashboard (deben coincidir con API_USER / API_PASS del .env).
+const API_USER = "publico";
+const API_PASS = "islas2026";
+const API_HEADERS = { "Authorization": "Basic " + btoa(`${API_USER}:${API_PASS}`) };
+
+const apiGet = (path) => fetch(API_BASE + path, { headers: API_HEADERS }).then(r => r.json());
+
 let _sensorsCache = [];
 let _gridCache    = [];
 let _resumenCache = {};
@@ -1473,9 +1840,9 @@ async function loadStats() {
   const pill = document.getElementById('ln-status');
   const txt  = document.getElementById('ln-status-text');
   try {
-    const r = await fetch('http://127.0.0.1:8000/api/resumen').then(r => r.json());
-    const s = await fetch('http://127.0.0.1:8000/api/sensores').then(r => r.json());
-    const g = await fetch('http://127.0.0.1:8000/api/grid').then(r => r.json());
+    const r = await apiGet('/api/resumen');
+    const s = await apiGet('/api/sensores');
+    const g = await apiGet('/api/grid');
 
     _resumenCache = r || {};
     _sensorsCache = Array.isArray(s) ? s : [];
@@ -1741,9 +2108,9 @@ pgForm?.addEventListener('submit', async e => {
 
   const t0 = performance.now();
   try {
-    const r = await fetch('http://127.0.0.1:8000/api/sensores', {
+    const r = await fetch(API_BASE + '/api/sensores', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...API_HEADERS },
       body: JSON.stringify(payload),
     });
     const t1 = performance.now();

@@ -125,7 +125,25 @@
       </section>
 
       <section class="layer-section">
-        <div class="layer-heading">4 · Selección de sensor</div>
+        <div class="layer-heading">4 · Rango de fechas</div>
+        <div class="date-filter">
+          <label class="date-field">
+            <span class="date-label">Desde</span>
+            <input type="date" id="date-from" class="date-input">
+          </label>
+          <label class="date-field">
+            <span class="date-label">Hasta</span>
+            <input type="date" id="date-to" class="date-input">
+          </label>
+          <div class="date-actions">
+            <button type="button" class="date-btn" id="date-reset">Limpiar</button>
+            <span class="date-count" id="date-count">—</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="layer-section">
+        <div class="layer-heading">5 · Selección de sensor</div>
         <select id="selector" class="select"></select>
       </section>
 
@@ -261,6 +279,9 @@
       <a class="toc-link" href="#py-get-async">Consulta asíncrona</a>
       <a class="toc-link" href="#py-get-poll">Polling y monitoreo</a>
 
+      <div class="toc-group">Avanzado</div>
+      <a class="toc-link" href="#cosmos-direct">Ingesta directa a Cosmos DB</a>
+
       <div class="toc-group">Referencia</div>
       <a class="toc-link" href="#codes">Códigos de respuesta</a>
       <a class="toc-link" href="#pipeline">Pipeline interno</a>
@@ -323,13 +344,30 @@
     <article id="auth" class="doc-block">
       <h2 class="doc-h2">Autenticación</h2>
       <p>
-        La versión actual de la API es <b>pública sin autenticación</b> — pensada para una red interna o
-        con control de acceso a nivel de red (firewall, VPN, IP allow-list).
+        La API protege <b>todos los endpoints <code>/api/*</code></b> con <b>HTTP Basic Auth</b>.
+        Las credenciales se configuran en el archivo <code>.env</code> del servidor mediante las
+        variables <code>API_USER</code> y <code>API_PASS</code>.
       </p>
+
+      <div class="alert">
+        <b>Credenciales por defecto (entorno de desarrollo):</b><br>
+        Usuario <code>publico</code> · Password <code>islas2026</code>
+      </div>
+
+      <p>Pasa las credenciales en cada llamada:</p>
+
+      <ul>
+        <li><b>curl</b>: <code>-u publico:islas2026</code></li>
+        <li><b>Python requests</b>: <code>auth=("publico", "islas2026")</code></li>
+        <li><b>JavaScript fetch</b>: <code>headers: { Authorization: "Basic " + btoa("publico:islas2026") }</code></li>
+      </ul>
+
       <div class="alert alert-warn">
-        <b>Recomendación de producción.</b> Antes de exponer la API a Internet, añade autenticación
-        por token (header <code>Authorization: Bearer ...</code>) y limita por IP en el firewall del
-        servidor. La base de datos Cosmos DB ya está protegida por <code>privatelink</code>.
+        <b>Cambia las credenciales antes de exponer la API a Internet.</b> Genera un password
+        aleatorio fuerte (<code>openssl rand -base64 24</code>) y actualízalo en
+        <code>.env</code> + reinicia el servicio (<code>systemctl restart islas-api</code>
+        o <code>az webapp restart</code>). Si despliegas en producción, asegúrate de servir
+        <b>siempre por HTTPS</b> — Basic Auth viaja en texto plano sobre HTTP.
       </div>
     </article>
 
@@ -408,6 +446,7 @@
           <button class="code-copy">Copiar</button>
         </div>
 <pre><code class="language-bash">curl -X POST http://127.0.0.1:8000/api/sensores \
+  -u publico:islas2026 \
   -H "Content-Type: application/json" \
   -d '{
     "device_id": "sensor-07",
@@ -1291,6 +1330,130 @@ if __name__ == "__main__":
       </div>
     </article>
 
+    <!-- ===== INGESTA DIRECTA A COSMOS DB ===== -->
+    <article id="cosmos-direct" class="doc-block">
+      <h2 class="doc-h2">Alternativa avanzada · Ingesta directa a Cosmos DB</h2>
+      <p>
+        Para cargas masivas, pruebas desde <b>Google Colab</b>, simulaciones de telemetría o
+        procesos batch, también puedes insertar directamente en la colección
+        <code>SensoresRaw</code> de <b>Cosmos DB (API for MongoDB)</b> sin pasar por la API REST.
+        Esto omite la autenticación Basic Auth porque usa las credenciales del propio cluster.
+      </p>
+
+      <div class="alert alert-warn">
+        <b>Acceso privilegiado — solo administradores.</b> Este flujo escribe directamente en la
+        base. La cadena <code>MONGO_URI</code> contiene credenciales de administrador del cluster
+        Cosmos DB. <b>No la subas a repos públicos ni la pegues en notebooks compartidos.</b>
+        Úsala solo para cargas iniciales, pruebas o migraciones.
+      </div>
+
+      <h3 class="doc-h3">Estructura del documento</h3>
+      <p>Idéntica al payload del POST, agregando un <code>timestamp</code> UTC:</p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">JSON · documento Mongo</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-json">{
+  "device_id":   "sensor-colab-01",
+  "temperatura": 34.2,
+  "humedad":     58.0,
+  "salinidad":   0.42,
+  "radiacion":   712.5,
+  "lat":         20.9674,
+  "lon":        -89.5926,
+  "estado":      "activo",
+  "timestamp":   ISODate("2026-05-26T18:42:11Z")
+}</code></pre>
+      </div>
+
+      <h3 class="doc-h3">Notebook completo · Google Colab</h3>
+      <p>
+        Conecta, verifica la colección, inserta una lectura individual, un batch simulado en
+        Mérida y consulta los últimos documentos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-lang">Python · ingesta_cosmos.ipynb</span>
+          <button class="code-copy">Copiar</button>
+        </div>
+<pre><code class="language-python"># ====================================================
+# Islas de Calor · Ingesta a Cosmos DB desde Colab
+# ====================================================
+!pip install -q "pymongo[srv]" pandas
+
+from datetime import datetime, timedelta
+from pymongo import MongoClient
+import pandas as pd
+import random, warnings
+
+warnings.filterwarnings("ignore")
+
+# 1) Credenciales — en producción usa getpass o variables de entorno
+MONGO_URI = (
+    "mongodb+srv://administrador:&lt;PASSWORD&gt;"
+    "@investigacion202605.global.mongocluster.cosmos.azure.com/"
+    "?tls=true&amp;authMechanism=SCRAM-SHA-256&amp;retrywrites=false&amp;maxIdleTimeMS=120000"
+)
+MONGO_DB   = "islas_calor"
+COLLECTION = "SensoresRaw"
+
+# 2) Conectar y verificar
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=15000)
+db  = client[MONGO_DB]
+col = db[COLLECTION]
+print("✓ Conectado a", MONGO_DB)
+print("  Colecciones:", db.list_collection_names())
+print("  Docs actuales en", COLLECTION, ":", col.estimated_document_count())
+
+# 3) Enviar UNA lectura
+una = {
+    "device_id":   "sensor-colab-01",
+    "temperatura": 34.2,
+    "humedad":     58.0,
+    "salinidad":   0.42,
+    "radiacion":   712.5,
+    "lat":         20.9674,
+    "lon":        -89.5926,
+    "estado":      "activo",
+    "timestamp":   datetime.utcnow(),
+}
+res = col.insert_one(una)
+print("\n✓ 1 lectura insertada · _id:", res.inserted_id)
+
+# 4) Enviar BATCH de N lecturas simuladas en Mérida
+N     = 20
+ahora = datetime.utcnow()
+batch = [{
+    "device_id":   f"sensor-colab-{i:02d}",
+    "temperatura": round(random.uniform(28.0, 38.0), 2),
+    "humedad":     round(random.uniform(40.0, 75.0), 2),
+    "salinidad":   round(random.uniform(0.1, 1.0), 3),
+    "radiacion":   round(random.uniform(400, 950), 1),
+    "lat":         round(20.94 + random.random() * 0.08, 6),
+    "lon":         round(-89.66 + random.random() * 0.08, 6),
+    "estado":      "activo",
+    "timestamp":   ahora - timedelta(minutes=i),
+} for i in range(N)]
+
+res = col.insert_many(batch)
+print(f"✓ {len(res.inserted_ids)} lecturas en batch insertadas")
+
+# 5) Verificar últimos registros
+ultimos = list(col.find().sort("timestamp", -1).limit(10))
+df = pd.DataFrame(ultimos).drop(columns=["_id"])
+print("\nÚltimos 10 documentos:")
+df</code></pre>
+      </div>
+
+      <div class="alert alert-info">
+        <b>Después de insertar:</b> el scheduler del API procesará la nueva data en el siguiente
+        ciclo del pipeline (máximo 5 min). Verás los KPIs actualizados en
+        <code>/api/resumen</code> y los puntos nuevos en el mapa de calor del dashboard.
+      </div>
+    </article>
+
     <!-- ===== CODES ===== -->
     <article id="codes" class="doc-block">
       <h2 class="doc-h2">Códigos de respuesta</h2>
@@ -1298,9 +1461,10 @@ if __name__ == "__main__":
         <thead><tr><th>Código</th><th>Significado</th><th>Acción del cliente</th></tr></thead>
         <tbody>
           <tr><td><span class="code-tag ok">200</span></td><td>Operación exitosa</td><td>Continuar normalmente</td></tr>
+          <tr><td><span class="code-tag warn">401</span></td><td>Credenciales inválidas o ausentes</td><td>Verificar <code>API_USER</code> / <code>API_PASS</code></td></tr>
           <tr><td><span class="code-tag warn">422</span></td><td>JSON inválido o campos faltantes</td><td>Revisar payload antes de reintentar</td></tr>
           <tr><td><span class="code-tag err">500</span></td><td>Error interno (p.ej. base de datos caída)</td><td>Reintentar con backoff exponencial</td></tr>
-          <tr><td><span class="code-tag err">503</span></td><td>Servicio no disponible</td><td>Buffer local + reintento</td></tr>
+          <tr><td><span class="code-tag err">503</span></td><td>Servicio no disponible · auth no configurada</td><td>Verificar variables de entorno en servidor</td></tr>
         </tbody>
       </table>
     </article>

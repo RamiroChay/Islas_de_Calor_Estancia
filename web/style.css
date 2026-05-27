@@ -364,6 +364,70 @@ button { font-family: inherit; }
 
 .select:focus { outline: 2px solid var(--teal); outline-offset: -1px; border-color: var(--teal); }
 
+/* ============================
+   Filtro de rango de fechas
+   ============================ */
+.date-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.date-label {
+  flex: 0 0 42px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.date-input {
+  flex: 1;
+  padding: 7px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  font-family: inherit;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+.date-input:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: -1px;
+  border-color: var(--teal);
+}
+.date-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+.date-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.date-btn:hover {
+  background: var(--panel);
+  color: inherit;
+  border-color: var(--teal);
+}
+.date-count {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .legend-bar {
   height: 12px;
   border-radius: 6px;

@@ -2,7 +2,24 @@
    Islas de Calor · Plataforma de Análisis Urbano
    ===================================================== */
 
-const API = "http://127.0.0.1:8000";
+// En desarrollo apunta a http://127.0.0.1:8000.
+// En producción usa el mismo dominio que sirve el frontend.
+const API = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
+  ? "http://127.0.0.1:8000"
+  : "";  // mismo origen — el server sirve tanto /api/* como los estáticos
+
+// Credenciales del dashboard público (auth blanda).
+// Deben coincidir con API_USER / API_PASS del .env del servidor.
+const API_USER = "publico";
+const API_PASS = "islas2026";
+const API_HEADERS = { "Authorization": "Basic " + btoa(`${API_USER}:${API_PASS}`) };
+
+function apiGet(path) {
+  return fetch(`${API}${path}`, { headers: API_HEADERS }).then(r => {
+    if (!r.ok) throw new Error(`${path} → HTTP ${r.status}`);
+    return r.json();
+  });
+}
 
 const ZONA_COLOR = {
   alta:  '#dc2626',
@@ -44,9 +61,9 @@ async function fetchAll() {
   try {
     setStatus('loading', 'Cargando…');
     const [s, g, r] = await Promise.all([
-      fetch(`${API}/api/sensores`).then(r => r.json()),
-      fetch(`${API}/api/grid`).then(r => r.json()),
-      fetch(`${API}/api/resumen`).then(r => r.json()),
+      apiGet('/api/sensores'),
+      apiGet('/api/grid'),
+      apiGet('/api/resumen'),
     ]);
 
     sensorsData = Array.isArray(s) ? s : [];
@@ -93,6 +110,7 @@ function renderAll() {
   renderOverlays();
   renderKPIs();
   renderDistribution();
+  updateDateCount();
 }
 
 /* ============================
@@ -109,10 +127,39 @@ function getChecked(sel) {
   return Array.from(document.querySelectorAll(sel + ':checked')).map(el => el.value);
 }
 
+function getDateRange() {
+  const from = document.getElementById('date-from')?.value;
+  const to   = document.getElementById('date-to')?.value;
+  const fromTs = from ? new Date(from + 'T00:00:00').getTime() : null;
+  const toTs   = to   ? new Date(to   + 'T23:59:59.999').getTime() : null;
+  return { fromTs, toTs };
+}
+
+function inDateRange(sensor, range) {
+  if (!sensor.timestamp) return true;
+  const t = new Date(sensor.timestamp).getTime();
+  if (range.fromTs != null && t < range.fromTs) return false;
+  if (range.toTs   != null && t > range.toTs)   return false;
+  return true;
+}
+
 function filteredSensors() {
   const z = getChecked('.zona-filter');
   const s = getChecked('.sup-filter');
-  return sensorsData.filter(d => z.includes(d.zona_termica) && s.includes(d.tipo_superficie));
+  const range = getDateRange();
+  return sensorsData.filter(d =>
+    z.includes(d.zona_termica) &&
+    s.includes(d.tipo_superficie) &&
+    inDateRange(d, range)
+  );
+}
+
+function updateDateCount() {
+  const el = document.getElementById('date-count');
+  if (!el) return;
+  const total = sensorsData.length;
+  const matched = filteredSensors().length;
+  el.textContent = `${matched} / ${total}`;
 }
 
 function renderMap() {
@@ -317,7 +364,26 @@ function onSelectorChange() {
 ['layer-heat', 'layer-sensors', 'layer-coverage', 'layer-labels'].forEach(id => {
   document.getElementById(id).addEventListener('change', renderMap);
 });
-document.querySelectorAll('.zona-filter, .sup-filter').forEach(el => el.addEventListener('change', renderMap));
+document.querySelectorAll('.zona-filter, .sup-filter').forEach(el => el.addEventListener('change', () => {
+  renderMap();
+  updateDateCount();
+}));
+
+/* Filtro de rango de fechas */
+['date-from', 'date-to'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', () => {
+    renderMap();
+    updateDateCount();
+  });
+});
+
+document.getElementById('date-reset')?.addEventListener('click', () => {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value   = '';
+  renderMap();
+  updateDateCount();
+});
 
 function toggleLeftPanel() {
   document.getElementById('layout').classList.toggle('left-collapsed');
