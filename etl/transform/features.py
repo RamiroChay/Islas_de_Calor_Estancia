@@ -8,8 +8,21 @@ def transform_data(df):
     # ---------------------------
     # 1. Limpieza
     # ---------------------------
-    df = df.dropna()
-    df = df.copy()
+    df = df.dropna().copy()
+
+    # ---------------------------
+    # 2. Agrupación espacial
+    # 1 sensor = 1 punto
+    # ---------------------------
+    df = df.groupby("device_id").agg({
+        "temperatura": "mean",
+        "humedad": "mean",
+        "radiacion": "mean",
+        "salinidad": "mean",
+        "lat": "mean",
+        "lon": "mean",
+        "timestamp": "max"
+    }).reset_index()
 
     # ---------------------------
     # 2. Variables base
@@ -74,5 +87,7 @@ def transform_data(df):
     df['tipo_superficie'] = df['salinidad'].apply(
         lambda x: 'urbano' if x > df['salinidad'].median() else 'natural'
     )
+
+    print(f"Sensores únicos: {len(df)}")
 
     return df
