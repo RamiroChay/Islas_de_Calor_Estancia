@@ -6,20 +6,21 @@ from datetime import datetime, timedelta
 
 load_dotenv()
 
-def get_raw_data():
+def get_raw_data(full=False):
 
     client = MongoClient(os.getenv("MONGO_URI"))
     db = client[os.getenv("MONGO_DB")]
     collection = db["SensoresRaw"]
 
-    # ---------------------------
-    # Últimos 5 minutos
-    # ---------------------------
-    limite = datetime.utcnow() - timedelta(minutes=5)
-
-    data = list(collection.find({
-        "timestamp": {"$gte": limite}
-    }))
+    if full:
+        # Rebuild completo: procesa TODAS las lecturas (sin filtro de tiempo)
+        data = list(collection.find({}))
+    else:
+        # Tiempo real: solo los últimos 5 minutos
+        limite = datetime.utcnow() - timedelta(minutes=5)
+        data = list(collection.find({
+            "timestamp": {"$gte": limite}
+        }))
 
     if not data:
         return pd.DataFrame()

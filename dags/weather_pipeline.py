@@ -9,14 +9,14 @@ import os
 
 load_dotenv()
 
-def run_pipeline():
+def run_pipeline(full=False):
     try:
-        print("Iniciando pipeline...")
+        print(f"Iniciando pipeline... ({'rebuild completo' if full else 'ventana 5 min'})")
 
         # ---------------------------
         # 1. EXTRACT
         # ---------------------------
-        df = get_raw_data()
+        df = get_raw_data(full=full)
 
         if df.empty:
             print("No hay datos en sensores_raw")

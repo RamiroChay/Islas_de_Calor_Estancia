@@ -581,6 +581,400 @@ if (docsContent) {
 setInterval(fetchAll, 60000);
 
 /* ============================
+   ZONA ADMIN · Truncar base de datos
+   Se activa solo cuando location.hash === '#admin'.
+   Botón en el topbar → modal con triple guard:
+     1) tres conteos visibles
+     2) usuario debe escribir literal "BORRAR TODO"
+     3) el endpoint POST /api/admin/truncate también valida la frase
+   ============================ */
+(function initAdminZone() {
+  const btnAdmin     = document.getElementById('btn-admin');
+  const modal        = document.getElementById('admin-modal');
+  const btnTruncate  = document.getElementById('btn-admin-truncate');
+  const confirmInput = document.getElementById('admin-confirm-input');
+  const result       = document.getElementById('admin-result');
+  if (!btnAdmin || !modal) return;
+
+  const CONFIRM = 'BORRAR TODO';
+
+  function syncVisibility() {
+    const isAdmin = location.hash === '#admin';
+    btnAdmin.hidden = !isAdmin;
+    if (!isAdmin) closeModal();
+  }
+  syncVisibility();
+  window.addEventListener('hashchange', syncVisibility);
+
+  function openModal() {
+    refreshCounts();
+    confirmInput.value = '';
+    btnTruncate.disabled = true;
+    result.hidden = true;
+    result.textContent = '';
+    result.className = 'admin-result';
+    modal.hidden = false;
+    requestAnimationFrame(() => modal.classList.add('open'));
+    setTimeout(() => confirmInput.focus(), 120);
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    setTimeout(() => { modal.hidden = true; }, 200);
+  }
+
+  btnAdmin.addEventListener('click', openModal);
+  modal.querySelectorAll('[data-admin-close]').forEach(el =>
+    el.addEventListener('click', closeModal)
+  );
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal();
+  });
+
+  confirmInput.addEventListener('input', () => {
+    btnTruncate.disabled = (confirmInput.value !== CONFIRM);
+  });
+
+  async function refreshCounts() {
+    modal.querySelectorAll('[data-count]').forEach(el => el.textContent = '…');
+    try {
+      const [s, g, r] = await Promise.all([
+        apiGet('/api/sensores'),
+        apiGet('/api/grid'),
+        apiGet('/api/resumen'),
+      ]);
+      modal.querySelector('[data-count="raw"]').textContent      = (Array.isArray(s) ? s.length : 0).toLocaleString();
+      modal.querySelector('[data-count="features"]').textContent = (Array.isArray(s) ? s.length : 0).toLocaleString();
+      modal.querySelector('[data-count="grid"]').textContent     = (Array.isArray(g) ? g.length : 0).toLocaleString();
+      modal.querySelector('[data-count="resumen"]').textContent  = (r && Object.keys(r).length) ? '1' : '0';
+    } catch (_) {
+      modal.querySelectorAll('[data-count]').forEach(el => el.textContent = '?');
+    }
+  }
+
+  btnTruncate.addEventListener('click', async () => {
+    if (confirmInput.value !== CONFIRM) return;
+
+    btnTruncate.disabled = true;
+    btnTruncate.textContent = 'Truncando…';
+    result.hidden = false;
+    result.className = 'admin-result loading';
+    result.textContent = 'Enviando solicitud al servidor…';
+
+    try {
+      const r = await fetch(`${API}/api/admin/truncate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+        body: JSON.stringify({ confirm: CONFIRM }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+
+      result.className = 'admin-result ok';
+      const lines = Object.entries(data.deleted || {})
+        .map(([k, v]) => `  ${k}: ${v} docs`).join('\n');
+      result.textContent = `✓ Base truncada · ${data.total} documentos eliminados\n${lines}`;
+
+      // Refrescar dashboard
+      setTimeout(fetchAll, 600);
+    } catch (e) {
+      result.className = 'admin-result error';
+      result.textContent = `✗ Error: ${e.message}`;
+    } finally {
+      btnTruncate.disabled = false;
+      btnTruncate.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg> Truncar todo';
+    }
+  });
+})();
+
+/* ============================
+   TOAST admin (notificaciones)
+   ============================ */
+function adminToast(message, type = 'ok', ms = 5000) {
+  const el = document.getElementById('admin-toast');
+  if (!el) return;
+  el.className = `admin-toast ${type}`;
+  el.textContent = message;
+  el.hidden = false;
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { el.hidden = true; }, 250);
+  }, ms);
+}
+
+/* ============================
+   EJECUTAR PIPELINE on-demand
+   ============================ */
+(function initRunPipeline() {
+  const btn = document.getElementById('btn-run-pipeline');
+  if (!btn) return;
+
+  function syncVisibility() { btn.hidden = location.hash !== '#admin'; }
+  syncVisibility();
+  window.addEventListener('hashchange', syncVisibility);
+
+  const original = btn.innerHTML;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Ejecutando…';
+    adminToast('Ejecutando pipeline ETL… puede tardar unos segundos.', 'loading', 30000);
+    try {
+      const r = await fetch(`${API}/api/admin/run-pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+      const c = data.counts || {};
+      adminToast(
+        `✓ Pipeline ejecutado · features: ${c.mediciones_analitica ?? '?'} · grid: ${c.mapa_calor_actual ?? '?'} · resumen: ${c.resumen_ambiental ?? '?'}`,
+        'ok', 6000
+      );
+      setTimeout(fetchAll, 400);
+    } catch (e) {
+      adminToast(`✗ Error en pipeline: ${e.message}`, 'error', 8000);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  });
+})();
+
+/* ============================
+   EXPLORADOR DE BASE DE DATOS · read-only
+   ============================ */
+(function initDbExplorer() {
+  const btn       = document.getElementById('btn-explore-db');
+  const modal     = document.getElementById('dbx-modal');
+  if (!btn || !modal) return;
+
+  const listEl    = document.getElementById('dbx-collections');
+  const refreshBtn= document.getElementById('dbx-refresh-collections');
+  const tableWrap = document.getElementById('dbx-table-wrap');
+  const collEl    = document.getElementById('dbx-current-coll');
+  const metaEl    = document.getElementById('dbx-current-meta');
+  const pageInfo  = document.getElementById('dbx-page-info');
+  const prevBtn   = document.getElementById('dbx-prev');
+  const nextBtn   = document.getElementById('dbx-next');
+  const limitSel  = document.getElementById('dbx-limit');
+  const delBtn    = document.getElementById('dbx-del-btn');
+  const confirmBar= document.getElementById('dbx-confirm-bar');
+  const confirmColl = document.getElementById('dbx-confirm-coll');
+  const confirmInput= document.getElementById('dbx-confirm-input');
+  const confirmYes  = document.getElementById('dbx-confirm-yes');
+  const confirmNo   = document.getElementById('dbx-confirm-no');
+
+  const state = { collection: null, total: 0, skip: 0, limit: 50 };
+
+  function syncVisibility() {
+    btn.hidden = location.hash !== '#admin';
+    if (location.hash !== '#admin') closeModal();
+  }
+  syncVisibility();
+  window.addEventListener('hashchange', syncVisibility);
+
+  function openModal() {
+    modal.hidden = false;
+    requestAnimationFrame(() => modal.classList.add('open'));
+    loadCollections();
+  }
+  function closeModal() {
+    modal.classList.remove('open');
+    hideConfirm();
+    setTimeout(() => { modal.hidden = true; }, 200);
+  }
+  btn.addEventListener('click', openModal);
+  modal.querySelectorAll('[data-dbx-close]').forEach(el =>
+    el.addEventListener('click', closeModal)
+  );
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal();
+  });
+
+  async function loadCollections() {
+    listEl.innerHTML = '<div class="dbx-loading">Cargando…</div>';
+    try {
+      const cols = await apiGet('/api/admin/db/collections');
+      listEl.innerHTML = '';
+      cols.forEach(c => {
+        const row = document.createElement('button');
+        row.className = 'dbx-coll-row';
+        row.dataset.name = c.name;
+        row.innerHTML = `
+          <div class="dbx-coll-name">${c.name}</div>
+          <div class="dbx-coll-count">${(c.count ?? 0).toLocaleString()}</div>
+        `;
+        row.addEventListener('click', () => selectCollection(c.name, c.count));
+        listEl.appendChild(row);
+      });
+      // Si ya hay una seleccionada, marcarla
+      if (state.collection) highlightActive();
+    } catch (e) {
+      listEl.innerHTML = `<div class="dbx-error">Error: ${e.message}</div>`;
+    }
+  }
+  refreshBtn.addEventListener('click', loadCollections);
+
+  function highlightActive() {
+    listEl.querySelectorAll('.dbx-coll-row').forEach(r => {
+      r.classList.toggle('active', r.dataset.name === state.collection);
+    });
+  }
+
+  async function selectCollection(name, count) {
+    state.collection = name;
+    state.total = count ?? 0;
+    state.skip = 0;
+    state.limit = parseInt(limitSel.value, 10) || 50;
+    highlightActive();
+    delBtn.disabled = false;
+    hideConfirm();
+    await loadDocs();
+  }
+
+  /* --- Vaciar tabla (truncate por colección) --- */
+  function showConfirm() {
+    if (!state.collection) return;
+    confirmColl.textContent = state.collection;
+    confirmInput.value = '';
+    confirmYes.disabled = true;
+    confirmBar.hidden = false;
+    setTimeout(() => confirmInput.focus(), 60);
+  }
+  function hideConfirm() {
+    confirmBar.hidden = true;
+    confirmInput.value = '';
+    confirmYes.disabled = true;
+  }
+  delBtn.addEventListener('click', () => {
+    confirmBar.hidden ? showConfirm() : hideConfirm();
+  });
+  confirmNo.addEventListener('click', hideConfirm);
+  confirmInput.addEventListener('input', () => {
+    confirmYes.disabled = (confirmInput.value !== state.collection);
+  });
+  confirmYes.addEventListener('click', async () => {
+    if (confirmInput.value !== state.collection) return;
+    const coll = state.collection;
+    confirmYes.disabled = true;
+    confirmYes.textContent = 'Vaciando…';
+    try {
+      const r = await fetch(`${API}/api/admin/db/${encodeURIComponent(coll)}/truncate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+        body: JSON.stringify({ confirm: coll }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+      hideConfirm();
+      // Recargar lista (conteos) y la vista actual
+      state.skip = 0;
+      state.total = 0;
+      await loadCollections();
+      await loadDocs();
+      // refrescar dashboard si la tabla afecta al mapa
+      setTimeout(fetchAll, 500);
+    } catch (e) {
+      tableWrap.innerHTML = `<div class="dbx-error">Error al vaciar: ${e.message}</div>`;
+      hideConfirm();
+    } finally {
+      confirmYes.textContent = 'Vaciar ahora';
+    }
+  });
+
+  async function loadDocs() {
+    if (!state.collection) return;
+    collEl.textContent = state.collection;
+    metaEl.textContent = `${state.total.toLocaleString()} documentos totales`;
+    tableWrap.innerHTML = '<div class="dbx-loading">Cargando documentos…</div>';
+
+    try {
+      const data = await apiGet(
+        `/api/admin/db/${encodeURIComponent(state.collection)}?limit=${state.limit}&skip=${state.skip}`
+      );
+      state.total = data.total;
+      renderTable(data.docs);
+      updatePager(data);
+    } catch (e) {
+      tableWrap.innerHTML = `<div class="dbx-error">Error: ${e.message}</div>`;
+    }
+  }
+
+  function renderTable(docs) {
+    if (!docs || docs.length === 0) {
+      tableWrap.innerHTML = '<div class="dbx-empty">(sin documentos en esta página)</div>';
+      return;
+    }
+    // Determina columnas: unión de keys de los primeros docs
+    const cols = [];
+    const seen = new Set();
+    docs.slice(0, 20).forEach(d => {
+      Object.keys(d).forEach(k => {
+        if (!seen.has(k)) { seen.add(k); cols.push(k); }
+      });
+    });
+    // _id siempre primero si existe
+    const ordered = ['_id', ...cols.filter(c => c !== '_id')];
+
+    const fmtCell = v => {
+      if (v == null) return '<span class="dbx-null">—</span>';
+      if (typeof v === 'object') {
+        const s = JSON.stringify(v);
+        return `<span class="dbx-json" title="${escapeHtml(s)}">${escapeHtml(s.slice(0, 60))}${s.length > 60 ? '…' : ''}</span>`;
+      }
+      const s = String(v);
+      // Cortar valores muy largos
+      if (s.length > 90) {
+        return `<span title="${escapeHtml(s)}">${escapeHtml(s.slice(0, 90))}…</span>`;
+      }
+      return escapeHtml(s);
+    };
+
+    const thead = `<tr>${ordered.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>`;
+    const tbody = docs.map(d =>
+      `<tr>${ordered.map(c => `<td>${fmtCell(d[c])}</td>`).join('')}</tr>`
+    ).join('');
+
+    tableWrap.innerHTML = `
+      <table class="dbx-table">
+        <thead>${thead}</thead>
+        <tbody>${tbody}</tbody>
+      </table>
+    `;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function updatePager(data) {
+    const from = data.total === 0 ? 0 : data.skip + 1;
+    const to   = data.skip + data.returned;
+    pageInfo.textContent = `${from.toLocaleString()}–${to.toLocaleString()} de ${data.total.toLocaleString()}`;
+    prevBtn.disabled = data.skip === 0;
+    nextBtn.disabled = to >= data.total;
+  }
+
+  prevBtn.addEventListener('click', () => {
+    state.skip = Math.max(0, state.skip - state.limit);
+    loadDocs();
+  });
+  nextBtn.addEventListener('click', () => {
+    state.skip = state.skip + state.limit;
+    loadDocs();
+  });
+  limitSel.addEventListener('change', () => {
+    state.limit = parseInt(limitSel.value, 10) || 50;
+    state.skip = 0;
+    loadDocs();
+  });
+})();
+
+/* ============================
    INIT
    ============================ */
 fetchAll();
