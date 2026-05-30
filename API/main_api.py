@@ -94,6 +94,35 @@ def start_scheduler():
 
 
 # ---------------------------
+# POST /api/admin/run-pipeline
+# Dispara el pipeline ETL on-demand (síncrono). Requiere auth.
+# Devuelve los conteos resultantes de cada colección.
+# ---------------------------
+@app.post("/api/admin/run-pipeline")
+def run_pipeline_now(_user: str = Depends(require_auth)):
+    try:
+        run_pipeline(full=True)   # botón manual = rebuild completo (todo SensoresRaw)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al ejecutar el pipeline: {e}",
+        )
+
+    counts = {}
+    for name in ["SensoresRaw", "mediciones_analitica", "mapa_calor_actual", "resumen_ambiental"]:
+        try:
+            counts[name] = db[name].estimated_document_count()
+        except Exception:
+            counts[name] = None
+
+    return {
+        "status": "ok",
+        "counts": counts,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+# ---------------------------
 # Healthcheck (Azure App Service lo usa para warm-up)
 # ---------------------------
 @app.get("/healthz")
@@ -165,6 +194,137 @@ def get_grid(_user: str = Depends(require_auth)):
 @app.get("/api/resumen")
 def get_resumen(_user: str = Depends(require_auth)):
     return db["resumen_ambiental"].find_one({}, {"_id": 0})
+
+
+# ---------------------------
+# GET /api/admin/db/collections
+# Lista las colecciones de la base con conteo aproximado.
+# ---------------------------
+@app.get("/api/admin/db/collections")
+def list_collections(_user: str = Depends(require_auth)):
+    out = []
+    for name in db.list_collection_names():
+        try:
+            count = db[name].estimated_document_count()
+        except Exception:
+            count = None
+        out.append({"name": name, "count": count})
+    out.sort(key=lambda x: x["name"])
+    return out
+
+
+# ---------------------------
+# GET /api/admin/db/{collection}?limit=50&skip=0
+# Devuelve documentos de una colección (paginado).
+# ---------------------------
+def _serialize_doc(doc):
+    """Convierte tipos BSON no-JSON (ObjectId, datetime) a strings."""
+    out = {}
+    for k, v in doc.items():
+        if hasattr(v, "isoformat"):
+            out[k] = v.isoformat() + ("Z" if not v.tzinfo else "")
+        elif isinstance(v, dict):
+            out[k] = _serialize_doc(v)
+        elif isinstance(v, list):
+            out[k] = [_serialize_doc(x) if isinstance(x, dict) else (str(x) if not isinstance(x, (str, int, float, bool, type(None))) else x) for x in v]
+        elif isinstance(v, (str, int, float, bool, type(None))):
+            out[k] = v
+        else:
+            out[k] = str(v)  # ObjectId, etc.
+    return out
+
+
+@app.get("/api/admin/db/{collection}")
+def get_collection_docs(
+    collection: str,
+    limit: int = 50,
+    skip: int = 0,
+    _user: str = Depends(require_auth),
+):
+    if collection not in db.list_collection_names():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Colección '{collection}' no existe.",
+        )
+
+    limit = max(1, min(int(limit), 500))
+    skip = max(0, int(skip))
+
+    total = db[collection].estimated_document_count()
+    cursor = db[collection].find({}).skip(skip).limit(limit)
+    docs = [_serialize_doc(d) for d in cursor]
+
+    return {
+        "collection": collection,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "returned": len(docs),
+        "docs": docs,
+    }
+
+
+# ---------------------------
+# POST /api/admin/db/{collection}/truncate
+# Borra los documentos de UNA sola colección. Requiere auth +
+# payload {"confirm": "<nombre_exacto_de_la_coleccion>"}.
+# ---------------------------
+@app.post("/api/admin/db/{collection}/truncate")
+def truncate_collection(collection: str, body: dict, _user: str = Depends(require_auth)):
+    if collection not in db.list_collection_names():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Colección '{collection}' no existe.",
+        )
+
+    if (body or {}).get("confirm") != collection:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Debes enviar {{"confirm": "{collection}"}} (el nombre exacto) para vaciar la tabla.',
+        )
+
+    res = db[collection].delete_many({})
+    return {
+        "status": "ok",
+        "collection": collection,
+        "deleted": res.deleted_count,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+
+
+# ---------------------------
+# POST /api/admin/truncate
+# Borra TODAS las colecciones. Requiere auth + payload con la frase exacta.
+# Devuelve los conteos de documentos eliminados por colección.
+# ---------------------------
+_TRUNCATABLE_COLLECTIONS = [
+    "SensoresRaw",
+    "mediciones_analitica",
+    "mapa_calor_actual",
+    "resumen_ambiental",
+]
+_CONFIRM_PHRASE = "BORRAR TODO"
+
+
+@app.post("/api/admin/truncate")
+def truncate_all(body: dict, _user: str = Depends(require_auth)):
+    if (body or {}).get("confirm") != _CONFIRM_PHRASE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'Debes enviar {{"confirm": "{_CONFIRM_PHRASE}"}} para ejecutar.',
+        )
+
+    deleted = {}
+    for name in _TRUNCATABLE_COLLECTIONS:
+        res = db[name].delete_many({})
+        deleted[name] = res.deleted_count
+
+    return {
+        "status": "ok",
+        "deleted": deleted,
+        "total": sum(deleted.values()),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
 
 
 # ---------------------------
