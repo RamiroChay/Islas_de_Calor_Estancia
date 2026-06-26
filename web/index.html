@@ -666,7 +666,7 @@
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/coordinador.jpg" alt="Coordinador del proyecto" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <img src="assets/team/salvador.png" alt="Coordinador del proyecto · foto pendiente" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
           <div class="ln-team-photo-ph" data-initials="DR">DR</div>
           <span class="ln-team-affil upy">UPY</span>
         </div>
@@ -686,27 +686,27 @@
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/investigador.jpg" alt="Investigadora senior" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
-          <div class="ln-team-photo-ph" data-initials="MC">MC</div>
+          <img src="assets/team/leandro.png" alt="Leandro Reyes" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="LR">LR</div>
           <span class="ln-team-affil upy">UPY</span>
         </div>
         <div class="ln-team-body">
-          <div class="ln-team-role">Investigación científica</div>
-          <h3 class="ln-team-name">Mtra. [Nombre Apellido]</h3>
+          <div class="ln-team-role">Procesamiento &amp; análisis de datos</div>
+          <h3 class="ln-team-name">Leandro Reyes</h3>
           <p class="ln-team-bio">
-            Especialista en análisis espacial y sistemas de información geográfica.
-            Responsable de la integración de fuentes públicas (SMN, INEGI, CHR) y
-            de la interpolación IDW del mapa de calor.
+            Estudiante de Ingeniería en Robótica Computacional · 8º semestre.
+            Procesamiento de telemetría de sensores, cálculo de features e
+            interpolación IDW del mapa de calor a partir de las lecturas crudas.
           </p>
           <div class="ln-team-tags">
-            <span>SIG</span><span>Análisis espacial</span><span>IDW</span>
+            <span>Python</span><span>Análisis</span><span>IDW</span>
           </div>
         </div>
       </article>
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/didier.jpg" alt="Didier Moreno" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <img src="assets/team/salvador.png" alt="Didier Moreno · foto pendiente" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
           <div class="ln-team-photo-ph" data-initials="DM">DM</div>
           <span class="ln-team-affil tec">Tec Software</span>
         </div>
@@ -726,7 +726,7 @@
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/ramiro.jpg" alt="Ramiro Chay" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <img src="assets/team/salvador.png" alt="Ramiro Chay · foto pendiente" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
           <div class="ln-team-photo-ph" data-initials="RC">RC</div>
           <span class="ln-team-affil tec">Tec Software</span>
         </div>
@@ -746,27 +746,27 @@
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/hardware.jpg" alt="Líder de hardware" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
-          <div class="ln-team-photo-ph" data-initials="IH">IH</div>
+          <img src="assets/team/salvador.png" alt="Salvador Camarillo" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <div class="ln-team-photo-ph" data-initials="SC">SC</div>
           <span class="ln-team-affil upy">UPY</span>
         </div>
         <div class="ln-team-body">
           <div class="ln-team-role">Instrumentación &amp; sensores IoT</div>
-          <h3 class="ln-team-name">Ing. [Nombre Apellido]</h3>
+          <h3 class="ln-team-name">Salvador Camarillo</h3>
           <p class="ln-team-bio">
+            Estudiante de Ingeniería en Robótica Computacional · 8º semestre.
             Diseño, calibración y despliegue de los dispositivos de medición
-            (ESP32, BME280, DHT22). Define el protocolo de telemetría que
-            alimenta la colección <code>SensoresRaw</code>.
+            (ESP32, BME280, DHT22) que alimentan la colección <code>SensoresRaw</code>.
           </p>
           <div class="ln-team-tags">
-            <span>ESP32</span><span>IoT</span><span>Calibración</span>
+            <span>Robótica</span><span>ESP32</span><span>IoT</span>
           </div>
         </div>
       </article>
 
       <article class="ln-team-card">
         <div class="ln-team-photo-wrap">
-          <img src="assets/team/asesor.jpg" alt="Asesor académico" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
+          <img src="assets/team/salvador.png" alt="Asesor académico · foto pendiente" class="ln-team-photo" onerror="this.parentElement.classList.add('ph')">
           <div class="ln-team-photo-ph" data-initials="AS">AS</div>
           <span class="ln-team-affil tec">Tec Software</span>
         </div>
@@ -1821,9 +1821,7 @@ plt.show()</code></pre>
 
 <script>
 /* ===== Stats en vivo del API ===== */
-const API_BASE = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
-  ? "http://127.0.0.1:8000"
-  : "";  // mismo origen en producción
+const API_BASE = "";  // mismo origen — FastAPI sirve estáticos y /api/*
 
 // Credenciales del dashboard (deben coincidir con API_USER / API_PASS del .env).
 const API_USER = "publico";
