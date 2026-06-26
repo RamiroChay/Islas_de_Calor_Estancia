@@ -2,11 +2,9 @@
    Islas de Calor · Plataforma de Análisis Urbano
    ===================================================== */
 
-// En desarrollo apunta a http://127.0.0.1:8000.
-// En producción usa el mismo dominio que sirve el frontend.
-const API = (location.hostname === "127.0.0.1" || location.hostname === "localhost")
-  ? "http://127.0.0.1:8000"
-  : "";  // mismo origen — el server sirve tanto /api/* como los estáticos
+// Mismo origen — FastAPI sirve tanto los estáticos (web/) como /api/*,
+// así que funciona en cualquier puerto y dominio sin cambios.
+const API = "";
 
 // Credenciales del dashboard público (auth blanda).
 // Deben coincidir con API_USER / API_PASS del .env del servidor.
@@ -19,6 +17,51 @@ function apiGet(path) {
     if (!r.ok) throw new Error(`${path} → HTTP ${r.status}`);
     return r.json();
   });
+}
+
+/* ============================
+   SESIÓN DE ADMINISTRADOR
+   El login verifica usuario+contraseña contra GET /api/admin/me.
+   Si la API responde 200, guardamos el Basic token (base64 de user:pass)
+   en sessionStorage y se revelan las acciones admin. Cada endpoint
+   /api/admin/* viaja con estas credenciales, NO con las públicas.
+   ============================ */
+const ADMIN_STORE_KEY = 'islas_admin_auth';   // base64("user:pass")
+const ADMIN_USER_KEY  = 'islas_admin_user';   // nombre para mostrar
+
+function getAdminToken() { return sessionStorage.getItem(ADMIN_STORE_KEY); }
+function isAdmin()       { return !!getAdminToken(); }
+function adminHeaders()  {
+  const t = getAdminToken();
+  return t ? { "Authorization": "Basic " + t } : {};
+}
+function adminApiGet(path) {
+  return fetch(`${API}${path}`, { headers: adminHeaders() }).then(r => {
+    if (!r.ok) throw new Error(`${path} → HTTP ${r.status}`);
+    return r.json();
+  });
+}
+function setAdminSession(token, user) {
+  sessionStorage.setItem(ADMIN_STORE_KEY, token);
+  sessionStorage.setItem(ADMIN_USER_KEY, user || 'admin');
+  window.dispatchEvent(new Event('admin-change'));
+}
+function clearAdminSession() {
+  sessionStorage.removeItem(ADMIN_STORE_KEY);
+  sessionStorage.removeItem(ADMIN_USER_KEY);
+  window.dispatchEvent(new Event('admin-change'));
+}
+// Verifica un Basic token contra la API. Resuelve con el nombre de usuario
+// si es admin; lanza error si no.
+async function verifyAdmin(token) {
+  const r = await fetch(`${API}/api/admin/me`, {
+    headers: { "Authorization": "Basic " + token },
+  });
+  if (r.status === 401) throw new Error('Credenciales inválidas.');
+  if (r.status === 503) throw new Error('El servidor no tiene configurado el acceso admin.');
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const data = await r.json();
+  return data.user || 'admin';
 }
 
 const ZONA_COLOR = {
@@ -480,15 +523,20 @@ function toast(msg, kind = '') {
 const navTabs    = document.querySelectorAll('.topbar-tab');
 const viewMain   = document.getElementById('layout');
 const viewDocs   = document.getElementById('docs-view');
+const viewAdmin  = document.getElementById('admin-view');
 const topActions = document.querySelector('.topbar-actions');
 const topCenter  = document.querySelector('.topbar-center');
 
 function setView(name) {
+  // La vista admin exige sesión: si no hay, cae al dashboard.
+  if (name === 'admin' && !isAdmin()) name = 'dashboard';
+
   navTabs.forEach(t => t.classList.toggle('active', t.dataset.view === name));
   viewMain.hidden = name !== 'dashboard';
   viewDocs.hidden = name !== 'docs';
+  if (viewAdmin) viewAdmin.hidden = name !== 'admin';
 
-  // Esconde controles del dashboard cuando estás en docs
+  // Los controles del topbar (status, refresh, export) son del dashboard.
   topActions.style.visibility = name === 'dashboard' ? 'visible' : 'hidden';
   topCenter.style.visibility  = name === 'dashboard' ? 'visible' : 'hidden';
 
@@ -500,6 +548,28 @@ function setView(name) {
   }
   if (name === 'docs') {
     document.querySelector('.docs-content')?.scrollTo({ top: 0 });
+  }
+  if (name === 'admin') {
+    loadAdminStats();
+  }
+}
+
+// Carga los conteos de colecciones en el panel admin (usa creds admin).
+async function loadAdminStats() {
+  const userEl = document.getElementById('adminx-user');
+  if (userEl) userEl.textContent = sessionStorage.getItem(ADMIN_USER_KEY) || 'admin';
+  const wrap = document.getElementById('adminx-stats');
+  if (!wrap) return;
+  try {
+    const cols = await adminApiGet('/api/admin/db/collections');
+    const counts = {};
+    cols.forEach(c => { counts[c.name] = c.count; });
+    wrap.querySelectorAll('[data-stat]').forEach(el => {
+      const n = counts[el.dataset.stat];
+      el.textContent = (n == null ? 0 : n).toLocaleString();
+    });
+  } catch (_) {
+    wrap.querySelectorAll('[data-stat]').forEach(el => { el.textContent = '—'; });
   }
 }
 
@@ -599,12 +669,12 @@ setInterval(fetchAll, 60000);
   const CONFIRM = 'BORRAR TODO';
 
   function syncVisibility() {
-    const isAdmin = location.hash === '#admin';
-    btnAdmin.hidden = !isAdmin;
-    if (!isAdmin) closeModal();
+    const ok = isAdmin();
+    btnAdmin.hidden = !ok;
+    if (!ok) closeModal();
   }
   syncVisibility();
-  window.addEventListener('hashchange', syncVisibility);
+  window.addEventListener('admin-change', syncVisibility);
 
   function openModal() {
     refreshCounts();
@@ -664,7 +734,7 @@ setInterval(fetchAll, 60000);
     try {
       const r = await fetch(`${API}/api/admin/truncate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify({ confirm: CONFIRM }),
       });
       const data = await r.json();
@@ -711,9 +781,9 @@ function adminToast(message, type = 'ok', ms = 5000) {
   const btn = document.getElementById('btn-run-pipeline');
   if (!btn) return;
 
-  function syncVisibility() { btn.hidden = location.hash !== '#admin'; }
+  function syncVisibility() { btn.hidden = !isAdmin(); }
   syncVisibility();
-  window.addEventListener('hashchange', syncVisibility);
+  window.addEventListener('admin-change', syncVisibility);
 
   const original = btn.innerHTML;
   btn.addEventListener('click', async () => {
@@ -723,7 +793,7 @@ function adminToast(message, type = 'ok', ms = 5000) {
     try {
       const r = await fetch(`${API}/api/admin/run-pipeline`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
@@ -769,11 +839,11 @@ function adminToast(message, type = 'ok', ms = 5000) {
   const state = { collection: null, total: 0, skip: 0, limit: 50 };
 
   function syncVisibility() {
-    btn.hidden = location.hash !== '#admin';
-    if (location.hash !== '#admin') closeModal();
+    btn.hidden = !isAdmin();
+    if (!isAdmin()) closeModal();
   }
   syncVisibility();
-  window.addEventListener('hashchange', syncVisibility);
+  window.addEventListener('admin-change', syncVisibility);
 
   function openModal() {
     modal.hidden = false;
@@ -796,7 +866,7 @@ function adminToast(message, type = 'ok', ms = 5000) {
   async function loadCollections() {
     listEl.innerHTML = '<div class="dbx-loading">Cargando…</div>';
     try {
-      const cols = await apiGet('/api/admin/db/collections');
+      const cols = await adminApiGet('/api/admin/db/collections');
       listEl.innerHTML = '';
       cols.forEach(c => {
         const row = document.createElement('button');
@@ -863,7 +933,7 @@ function adminToast(message, type = 'ok', ms = 5000) {
     try {
       const r = await fetch(`${API}/api/admin/db/${encodeURIComponent(coll)}/truncate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...API_HEADERS },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify({ confirm: coll }),
       });
       const data = await r.json();
@@ -891,7 +961,7 @@ function adminToast(message, type = 'ok', ms = 5000) {
     tableWrap.innerHTML = '<div class="dbx-loading">Cargando documentos…</div>';
 
     try {
-      const data = await apiGet(
+      const data = await adminApiGet(
         `/api/admin/db/${encodeURIComponent(state.collection)}?limit=${state.limit}&skip=${state.skip}`
       );
       state.total = data.total;
@@ -971,6 +1041,110 @@ function adminToast(message, type = 'ok', ms = 5000) {
     state.limit = parseInt(limitSel.value, 10) || 50;
     state.skip = 0;
     loadDocs();
+  });
+})();
+
+/* ============================
+   LOGIN · Acceso de administrador
+   Verifica usuario+contraseña contra GET /api/admin/me. Si es válido,
+   guarda la sesión y dispara 'admin-change' (revela las acciones admin).
+   ============================ */
+(function initLogin() {
+  const btnLogin   = document.getElementById('btn-login');
+  const btnLogout  = document.getElementById('btn-logout');
+  const modal      = document.getElementById('login-modal');
+  const form       = document.getElementById('login-form');
+  const userInput  = document.getElementById('login-user');
+  const passInput  = document.getElementById('login-pass');
+  const result     = document.getElementById('login-result');
+  const submitBtn  = document.getElementById('btn-login-submit');
+  const userLabel  = document.getElementById('admin-user-label');
+  if (!btnLogin || !modal || !form) return;
+
+  const tabAdmin   = document.getElementById('tab-admin');
+
+  // Refleja el estado de sesión: topbar (login/logout) + pestaña Administración.
+  function syncAuthUI() {
+    const logged = isAdmin();
+    btnLogin.hidden  = logged;
+    btnLogout.hidden = !logged;
+    if (tabAdmin) tabAdmin.hidden = !logged;
+    if (logged && userLabel) {
+      userLabel.textContent = sessionStorage.getItem(ADMIN_USER_KEY) || 'admin';
+    }
+  }
+  syncAuthUI();
+  window.addEventListener('admin-change', syncAuthUI);
+
+  // Cierra sesión y vuelve al visor. Compartido por el botón del topbar
+  // y el del propio panel de administración.
+  function doLogout() {
+    clearAdminSession();
+    setView('dashboard');
+    toast('Sesión de administrador cerrada', 'ok');
+  }
+  document.getElementById('btn-admin-logout')?.addEventListener('click', doLogout);
+  document.getElementById('btn-admin-back')?.addEventListener('click', () => setView('dashboard'));
+
+  function openModal() {
+    result.hidden = true;
+    result.textContent = '';
+    result.className = 'admin-result';
+    passInput.value = '';
+    modal.hidden = false;
+    requestAnimationFrame(() => modal.classList.add('open'));
+    setTimeout(() => userInput.focus(), 120);
+  }
+  function closeModal() {
+    modal.classList.remove('open');
+    setTimeout(() => { modal.hidden = true; }, 200);
+  }
+
+  btnLogin.addEventListener('click', openModal);
+  modal.querySelectorAll('[data-login-close]').forEach(el =>
+    el.addEventListener('click', closeModal)
+  );
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal();
+  });
+
+  btnLogout.addEventListener('click', doLogout);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = userInput.value.trim();
+    const pass = passInput.value;
+    if (!user || !pass) {
+      result.hidden = false;
+      result.className = 'admin-result error';
+      result.textContent = 'Escribe usuario y contraseña.';
+      return;
+    }
+
+    const token = btoa(`${user}:${pass}`);
+    submitBtn.disabled = true;
+    const original = submitBtn.innerHTML;
+    submitBtn.innerHTML = 'Verificando…';
+    result.hidden = false;
+    result.className = 'admin-result loading';
+    result.textContent = 'Verificando credenciales…';
+
+    try {
+      const verifiedUser = await verifyAdmin(token);
+      setAdminSession(token, verifiedUser);     // revela la pestaña Administración
+      result.className = 'admin-result ok';
+      result.textContent = `✓ Bienvenido, ${verifiedUser}`;
+      toast('Sesión de administrador iniciada', 'ok');
+      // Entra directo a la interfaz de administración (ajena al visor).
+      setTimeout(() => { closeModal(); setView('admin'); }, 600);
+    } catch (err) {
+      clearAdminSession();
+      result.className = 'admin-result error';
+      result.textContent = `✗ ${err.message}`;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = original;
+    }
   });
 })();
 

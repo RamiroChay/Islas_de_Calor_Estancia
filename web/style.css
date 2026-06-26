@@ -2212,3 +2212,83 @@ table code {
   .docs-sidebar { display: none; }
   .docs-content { padding: 24px; }
 }
+
+/* =====================================================
+   FIX · respetar el atributo [hidden]
+   Sin esto, .btn / .topbar-tab fijan display y los elementos
+   con [hidden] seguían visibles (bug de los botones admin).
+   ===================================================== */
+[hidden] { display: none !important; }
+
+/* =====================================================
+   VISTA ADMINISTRACIÓN · interfaz propia, ajena al visor
+   ===================================================== */
+.admin-view {
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 44px 32px 72px;
+}
+.adminx-wrap { max-width: 1080px; margin: 0 auto; }
+
+.adminx-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+.adminx-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+.adminx-title { font-size: 28px; font-weight: 800; color: var(--text); margin: 0 0 8px; letter-spacing: -.02em; }
+.adminx-sub { font-size: 14px; color: var(--muted); margin: 0; max-width: 580px; line-height: 1.55; }
+.adminx-sub strong { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.adminx-head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Conteos de colecciones */
+.adminx-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px;
+}
+.adminx-stat {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 16px; box-shadow: var(--shadow-sm);
+}
+.adminx-stat-num { font-size: 26px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+.adminx-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
+
+/* Tarjetas de acción */
+.adminx-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px;
+}
+.adminx-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+  text-align: left; padding: 26px 24px; border-radius: 16px;
+  border: 1px solid var(--border); background: var(--panel);
+  cursor: pointer; font-family: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.adminx-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.adminx-card:disabled { opacity: .65; cursor: progress; transform: none; }
+.adminx-card-ico {
+  width: 48px; height: 48px; border-radius: 13px;
+  display: grid; place-items: center; margin-bottom: 6px;
+}
+.adminx-card-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.adminx-card-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+.adminx-card--pipeline .adminx-card-ico { background: rgba(37,99,235,.12); color: #2563eb; }
+.adminx-card--pipeline:hover { border-color: rgba(37,99,235,.45); }
+.adminx-card--explore  .adminx-card-ico { background: rgba(13,148,136,.12); color: #0d9488; }
+.adminx-card--explore:hover { border-color: rgba(13,148,136,.45); }
+.adminx-card--danger   .adminx-card-ico { background: rgba(220,38,38,.12); color: #dc2626; }
+.adminx-card--danger:hover { border-color: rgba(220,38,38,.45); }
+.adminx-card--danger   .adminx-card-title { color: #b91c1c; }
+
+@media (max-width: 760px) {
+  .adminx-stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-view { padding: 28px 18px 56px; }
+}

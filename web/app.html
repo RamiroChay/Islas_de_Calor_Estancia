@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=2026052704">
+<link rel="stylesheet" href="style.css?v=2026062502">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
@@ -53,6 +53,11 @@
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       Documentación API
     </button>
+    <!-- Administración: solo visible con sesión de administrador iniciada -->
+    <button class="topbar-tab" data-view="admin" id="tab-admin" hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Administración
+    </button>
   </nav>
 
   <div class="topbar-center">
@@ -64,18 +69,15 @@
   </div>
 
   <div class="topbar-actions">
-    <!-- Admin: visibles solo cuando location.hash === '#admin' -->
-    <button class="btn btn-pipeline" id="btn-run-pipeline" title="Ejecutar el pipeline ETL ahora (rebuild completo de todas las lecturas)" hidden>
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Ejecutar pipeline
+    <!-- Login: punto de entrada a la zona admin. Visible cuando NO hay sesión. -->
+    <button class="btn btn-ghost" id="btn-login" title="Iniciar sesión como administrador">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Iniciar sesión
     </button>
-    <button class="btn btn-explore" id="btn-explore-db" title="Explorar tablas y datos de la BD" hidden>
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
-      Explorar BD
-    </button>
-    <button class="btn btn-admin" id="btn-admin" title="Zona admin · truncar BD" hidden>
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Admin
+    <!-- Logout: visible solo con sesión admin activa. -->
+    <button class="btn btn-ghost" id="btn-logout" title="Cerrar sesión de administrador" hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Salir · <span id="admin-user-label">admin</span>
     </button>
 
     <button class="btn btn-ghost" id="btn-refresh" title="Actualizar datos">
@@ -1602,8 +1604,128 @@ df</code></pre>
 
 
 <!-- =====================================================
+     VISTA ADMINISTRACIÓN · interfaz propia, ajena al visor
+     Solo accesible con sesión de administrador iniciada.
+     ===================================================== -->
+<section class="admin-view" id="admin-view" hidden>
+  <div class="adminx-wrap">
+
+    <header class="adminx-head">
+      <div>
+        <div class="adminx-eyebrow">Zona restringida</div>
+        <h1 class="adminx-title">Panel de administración</h1>
+        <p class="adminx-sub">
+          Gestión del pipeline ETL y de la base de datos Cosmos DB.
+          Sesión activa: <strong id="adminx-user">admin</strong>.
+        </p>
+      </div>
+      <div class="adminx-head-actions">
+        <button class="btn btn-ghost" id="btn-admin-back" title="Volver al mapa">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Volver al visor
+        </button>
+        <button class="btn btn-ghost" id="btn-admin-logout" title="Cerrar sesión">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </header>
+
+    <!-- Conteos rápidos de las colecciones -->
+    <div class="adminx-stats" id="adminx-stats">
+      <div class="adminx-stat"><div class="adminx-stat-num" data-stat="SensoresRaw">—</div><div class="adminx-stat-lbl">SensoresRaw</div></div>
+      <div class="adminx-stat"><div class="adminx-stat-num" data-stat="mediciones_analitica">—</div><div class="adminx-stat-lbl">mediciones_analitica</div></div>
+      <div class="adminx-stat"><div class="adminx-stat-num" data-stat="mapa_calor_actual">—</div><div class="adminx-stat-lbl">mapa_calor_actual</div></div>
+      <div class="adminx-stat"><div class="adminx-stat-num" data-stat="resumen_ambiental">—</div><div class="adminx-stat-lbl">resumen_ambiental</div></div>
+    </div>
+
+    <!-- Acciones de administración -->
+    <div class="adminx-grid">
+      <button class="adminx-card adminx-card--pipeline" id="btn-run-pipeline" title="Ejecutar el pipeline ETL ahora (rebuild completo)">
+        <span class="adminx-card-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </span>
+        <span class="adminx-card-title">Ejecutar pipeline</span>
+        <span class="adminx-card-desc">Rebuild completo del ETL: recalcula features derivadas, grid IDW y el resumen ambiental a partir de SensoresRaw.</span>
+      </button>
+
+      <button class="adminx-card adminx-card--explore" id="btn-explore-db" title="Explorar tablas y datos de la BD">
+        <span class="adminx-card-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        </span>
+        <span class="adminx-card-title">Explorar base de datos</span>
+        <span class="adminx-card-desc">Navega las colecciones de Cosmos DB en modo lectura, página a página, y vacía tablas individuales si lo necesitas.</span>
+      </button>
+
+      <button class="adminx-card adminx-card--danger" id="btn-admin" title="Zona destructiva · truncar BD">
+        <span class="adminx-card-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+        </span>
+        <span class="adminx-card-title">Truncar base de datos</span>
+        <span class="adminx-card-desc">Operación destructiva: borra TODOS los documentos de las colecciones. Requiere confirmación escrita. No hay undo.</span>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- =====================================================
+     MODAL LOGIN · Acceso de administrador
+     Verifica credenciales contra GET /api/admin/me.
+     ===================================================== -->
+<div class="admin-modal" id="login-modal" hidden>
+  <div class="admin-modal-backdrop" data-login-close></div>
+
+  <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+
+    <header class="admin-modal-header">
+      <div class="admin-modal-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div>
+        <div class="admin-modal-eyebrow">Zona admin · acceso restringido</div>
+        <h2 class="admin-modal-title" id="login-modal-title">Iniciar sesión</h2>
+      </div>
+      <button class="admin-modal-close" data-login-close title="Cerrar (ESC)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <div class="admin-modal-body">
+
+      <form id="login-form" autocomplete="off">
+        <div class="admin-confirm-wrap">
+          <label class="admin-confirm-label" for="login-user">Usuario</label>
+          <input type="text" id="login-user" class="admin-confirm-input"
+                 placeholder="admin" autocomplete="username" spellcheck="false" autofocus>
+        </div>
+
+        <div class="admin-confirm-wrap">
+          <label class="admin-confirm-label" for="login-pass">Contraseña</label>
+          <input type="password" id="login-pass" class="admin-confirm-input"
+                 placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div class="admin-result" id="login-result" hidden></div>
+
+        <div class="admin-actions">
+          <button type="button" class="btn btn-ghost" data-login-close>Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-login-submit">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Entrar
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- =====================================================
      MODAL ADMIN · Zona destructiva
-     Visible solo cuando location.hash === "#admin"
+     Visible solo con sesión de administrador iniciada
      ===================================================== -->
 <div class="admin-modal" id="admin-modal" hidden>
   <div class="admin-modal-backdrop" data-admin-close></div>
@@ -1681,7 +1803,7 @@ df</code></pre>
   </div>
 </div>
 
-<script src="script.js?v=2026052704"></script>
+<script src="script.js?v=2026062502"></script>
 
 </body>
 </html>

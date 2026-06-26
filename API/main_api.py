@@ -50,6 +50,11 @@ resumen_collection = db['resumen_ambiental']
 _API_USER = os.getenv("API_USER", "").strip()
 _API_PASS = os.getenv("API_PASS", "").strip()
 
+# Credenciales de ADMINISTRADOR (zona admin: pipeline, explorador BD, truncate).
+# Independientes de las públicas: protegen todos los endpoints /api/admin/*.
+_API_ADMIN_USER = os.getenv("API_ADMIN_USER", "").strip()
+_API_ADMIN_PASS = os.getenv("API_ADMIN_PASS", "").strip()
+
 _security = HTTPBasic(realm="Islas de Calor · API")
 
 
@@ -66,6 +71,26 @@ def require_auth(creds: HTTPBasicCredentials = Depends(_security)) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas.",
             headers={"WWW-Authenticate": 'Basic realm="Islas de Calor · API"'},
+        )
+    return creds.username
+
+
+def require_admin(creds: HTTPBasicCredentials = Depends(_security)) -> str:
+    """Valida credenciales de ADMINISTRADOR (API_ADMIN_USER / API_ADMIN_PASS).
+    Protege todos los endpoints /api/admin/*. Las credenciales públicas
+    (require_auth) NO dan acceso aquí."""
+    if not _API_ADMIN_USER or not _API_ADMIN_PASS:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="API_ADMIN_USER / API_ADMIN_PASS no configurados en el servidor.",
+        )
+    user_ok = secrets.compare_digest(creds.username, _API_ADMIN_USER)
+    pass_ok = secrets.compare_digest(creds.password, _API_ADMIN_PASS)
+    if not (user_ok and pass_ok):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales de administrador inválidas.",
+            headers={"WWW-Authenticate": 'Basic realm="Islas de Calor · Admin"'},
         )
     return creds.username
 
@@ -94,12 +119,22 @@ def start_scheduler():
 
 
 # ---------------------------
+# GET /api/admin/me
+# Verifica credenciales de administrador. El frontend lo usa como "login":
+# 200 => credenciales válidas (es admin); 401 => inválidas.
+# ---------------------------
+@app.get("/api/admin/me")
+def admin_me(user: str = Depends(require_admin)):
+    return {"user": user, "role": "admin"}
+
+
+# ---------------------------
 # POST /api/admin/run-pipeline
-# Dispara el pipeline ETL on-demand (síncrono). Requiere auth.
+# Dispara el pipeline ETL on-demand (síncrono). Requiere admin.
 # Devuelve los conteos resultantes de cada colección.
 # ---------------------------
 @app.post("/api/admin/run-pipeline")
-def run_pipeline_now(_user: str = Depends(require_auth)):
+def run_pipeline_now(_user: str = Depends(require_admin)):
     try:
         run_pipeline(full=True)   # botón manual = rebuild completo (todo SensoresRaw)
     except Exception as e:
@@ -201,7 +236,7 @@ def get_resumen(_user: str = Depends(require_auth)):
 # Lista las colecciones de la base con conteo aproximado.
 # ---------------------------
 @app.get("/api/admin/db/collections")
-def list_collections(_user: str = Depends(require_auth)):
+def list_collections(_user: str = Depends(require_admin)):
     out = []
     for name in db.list_collection_names():
         try:
@@ -239,7 +274,7 @@ def get_collection_docs(
     collection: str,
     limit: int = 50,
     skip: int = 0,
-    _user: str = Depends(require_auth),
+    _user: str = Depends(require_admin),
 ):
     if collection not in db.list_collection_names():
         raise HTTPException(
@@ -270,7 +305,7 @@ def get_collection_docs(
 # payload {"confirm": "<nombre_exacto_de_la_coleccion>"}.
 # ---------------------------
 @app.post("/api/admin/db/{collection}/truncate")
-def truncate_collection(collection: str, body: dict, _user: str = Depends(require_auth)):
+def truncate_collection(collection: str, body: dict, _user: str = Depends(require_admin)):
     if collection not in db.list_collection_names():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -307,7 +342,7 @@ _CONFIRM_PHRASE = "BORRAR TODO"
 
 
 @app.post("/api/admin/truncate")
-def truncate_all(body: dict, _user: str = Depends(require_auth)):
+def truncate_all(body: dict, _user: str = Depends(require_admin)):
     if (body or {}).get("confirm") != _CONFIRM_PHRASE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -330,7 +365,21 @@ def truncate_all(body: dict, _user: str = Depends(require_auth)):
 # ---------------------------
 # Frontend estático (debe ir AL FINAL para que las rutas /api/* tengan prioridad)
 # Sirve web/index.html en "/" y web/app.html en "/app.html".
+#
+# NoCacheStaticFiles: añade cabeceras anti-caché para que el navegador SIEMPRE
+# pida la versión más reciente del HTML/CSS/JS. Evita el clásico "edité pero el
+# navegador sigue mostrando lo viejo". (En producción podrías cachear los assets
+# versionados, pero en este proyecto el frontend cambia seguido.)
 # ---------------------------
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
 _WEB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web"))
 if os.path.isdir(_WEB_DIR):
-    app.mount("/", StaticFiles(directory=_WEB_DIR, html=True), name="web")
+    app.mount("/", NoCacheStaticFiles(directory=_WEB_DIR, html=True), name="web")
