@@ -1,3 +1,16 @@
+"""API REST de la plataforma de islas de calor (FastAPI).
+
+Expone:
+- Ingesta de lecturas de sensores (``POST /api/sensores``).
+- Lectura pública del dashboard (``GET /api/sensores|grid|resumen``), protegida
+  con Basic Auth de sólo lectura (``API_USER`` / ``API_PASS``).
+- Zona admin (``/api/admin/*``: pipeline, explorador de BD, truncate),
+  protegida con credenciales de administrador (``API_ADMIN_USER`` / ``API_ADMIN_PASS``).
+- Sirve el frontend estático de ``web/`` (con cabeceras anti-caché).
+
+Además, un scheduler en segundo plano ejecuta el pipeline ETL cada 5 minutos.
+"""
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -59,6 +72,11 @@ _security = HTTPBasic(realm="Islas de Calor · API")
 
 
 def require_auth(creds: HTTPBasicCredentials = Depends(_security)) -> str:
+    """Valida las credenciales PÚBLICAS (sólo lectura) del dashboard.
+
+    Si ``API_USER`` / ``API_PASS`` no están configuradas, la API arranca pero
+    rechaza toda petición protegida con 503.
+    """
     if not _API_USER or not _API_PASS:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -98,6 +116,11 @@ def require_admin(creds: HTTPBasicCredentials = Depends(_security)) -> str:
 # Background scheduler
 # ---------------------------
 def scheduler():
+    """Bucle en segundo plano: corre el pipeline ETL cada 5 minutos.
+
+    Captura las excepciones para que un fallo de una corrida no tumbe el hilo
+    (que es daemon) ni la API.
+    """
     while True:
         try:
             print("Ejecutando pipeline...")

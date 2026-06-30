@@ -3096,3 +3096,86 @@ a { color: inherit; text-decoration: none; }
   .ln-logos { grid-template-columns: 1fr; }
   .ln-footer-bottom { flex-direction: column; gap: 8px; }
 }
+
+/* =====================================================================
+   HERO v3 · TERMÓGRAFO — campo térmico nocturno, premium
+   Override al final: el hero pasa a oscuro y las islas de calor brillan.
+   El resto de la página sigue claro; el nav vuelve a su estado claro al
+   hacer scroll (.scrolled ya definido arriba).
+   ===================================================================== */
+:root { --hero-bg: #faf9f6; }
+
+/* --- Campo claro + mapa visible --- */
+.ln-hero { background: var(--hero-bg); color: var(--text); }
+/* Mapa claro con líneas OSCURAS y sin amarillo: invertimos las tiles
+   oscuras (escala de grises) -> fondo claro + calles gris oscuro.
+   El filtro va SÓLO al panel de tiles; los blobs de calor (overlay pane)
+   y los sensores (marker pane) quedan intactos. */
+.ln-hero-map { filter: none; }
+.ln-hero-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(.96) contrast(1.06);
+}
+.ln-hero-map .leaflet-container { background: #f1efe9 !important; }
+
+/* Overlay: blanco SÓLIDO en el tercio izquierdo (las letras no se tapan
+   con el mapa), y totalmente TRANSPARENTE de la mitad a la derecha para
+   que Mérida se vea fuerte. Viñeta sup/inf muy leve. */
+.ln-hero-overlay {
+  background:
+    linear-gradient(90deg,
+      rgba(250,249,246,1) 0%, rgba(250,249,246,.99) 30%, rgba(250,249,246,.78) 42%,
+      rgba(250,249,246,.28) 50%, rgba(250,249,246,0) 58%),
+    linear-gradient(180deg,
+      rgba(250,249,246,.42) 0%, transparent 16%, transparent 86%, rgba(250,249,246,.55) 100%);
+}
+
+/* --- Titular: Space Grotesk premium, oscuro + acento cálido --- */
+.ln-hero-h1 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  color: #14211f;
+}
+.ln-hero-h1-accent {
+  background: linear-gradient(100deg, #f59e0b 0%, #f97316 46%, #ef4444 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 12px rgba(249,115,22,.22));
+}
+
+/* =====================================================================
+   FIRMA · Escala térmica vertical (lectura tipo FLIR)
+   ===================================================================== */
+.ln-thermal-legend {
+  position: absolute; z-index: 6;
+  right: 56px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  pointer-events: none;
+}
+.ln-tl-cap {
+  font: 600 10px/1 'JetBrains Mono', monospace;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: #64748b;
+}
+.ln-tl-bar {
+  position: relative; width: 9px; height: 210px; border-radius: 6px;
+  background: linear-gradient(to top,
+    #e2e8f0 0%, #fcd34d 22%, #f59e0b 45%, #f97316 64%, #ef4444 82%, #b91c1c 100%);
+  box-shadow: 0 8px 22px rgba(15,23,42,.14), inset 0 0 0 1px rgba(15,23,42,.06);
+}
+.ln-tl-tick {
+  position: absolute; left: 18px; transform: translateY(-50%);
+  font: 600 10px/1 'JetBrains Mono', monospace;
+  color: #475569; white-space: nowrap;
+}
+.ln-tl-tick::before {
+  content: ''; position: absolute; left: -13px; top: 50%;
+  width: 9px; height: 1px; background: rgba(15,23,42,.25);
+}
+
+@media (max-width: 1100px) {
+  .ln-thermal-legend { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ln-hero-eyebrow-dot { animation: none; }
+}
