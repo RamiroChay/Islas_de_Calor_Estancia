@@ -112,8 +112,9 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
     # ---------------------------
     # 11. Tipo de superficie (proxy por salinidad)
     # ---------------------------
+    mediana_salinidad = df['salinidad'].median()
     df['tipo_superficie'] = df['salinidad'].apply(
-        lambda x: 'urbano' if x > df['salinidad'].median() else 'natural'
+        lambda x: 'urbano' if x > mediana_salinidad else 'natural'
     )
 
     print(f"Sensores únicos: {len(df)}")

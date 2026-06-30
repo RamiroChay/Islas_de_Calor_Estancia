@@ -33,7 +33,7 @@ def calcular_resumen(df: pd.DataFrame, features_df: pd.DataFrame) -> dict:
 
         "zona_dominante": features_df["zona_termica"].mode()[0],
 
-        "num_sensores": int(len(df)),
+        "num_sensores": int(len(features_df)),
 
         "pipeline_timestamp": datetime.utcnow(),
     }
